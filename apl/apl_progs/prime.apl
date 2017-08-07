@@ -2,8 +2,10 @@ decl
 	integer n, i, j, d;
 enddecl
 integer main(){
+	print ("Enter number");
 	read (n);
 	i = 2;
+	print ("Prime Numbers");
 	while( i <= n) do
 	       j = 2;
 	       d = 0;
