@@ -1,5 +1,13 @@
+// Load Exception Handler from disk to memory
 load(7, 1);
 load(8, 2);
+// Load Timer Interrupt Routine from disk to memory
+load (9, 3);
+load (10, 4);
+// Load Interrupt 1 Routine from disk to memory
+load (11, 5);
+load (12, 6);
+// Load Interrupt 7 Routine from disk to memory
 load(23, 17);
 load(24, 18);
 [READY_LIST + 0] = 0; // Sets the entry for PID as 0
