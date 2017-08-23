@@ -1,12 +1,11 @@
-decl
-	integer n, i;
-enddecl
+
 integer main()
 {
-	n=20;
-	while (n>0) do
+	integer n;
+	n=0;
+	while (n <= 20) do
 	      print(n);
-	      n = n-2;
+	      n = n+2;
 	endwhile;
 	return 0;
 }

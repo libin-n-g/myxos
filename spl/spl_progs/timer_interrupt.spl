@@ -1,13 +1,13 @@
-print "TIMER";
+/////////////////////////////TIMER INTERRUPT HANDLER//////////////////// 
 alias currentPID S0;
 currentPID = (PTBR - 1024) / 8;
+
+///////////////////////////STORING CURRENT PROCESS STATE///////////////////
 alias currentPCB S1;
 currentPCB = READY_LIST + 32 * currentPID;
-breakpoint;
 [ currentPCB + 1 ] = 1; // Set STATE to READY
 [ currentPCB + 2 ] = BP;
 [ currentPCB + 3 ] = SP - 1;
-
 alias physicalSP S2;
 physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 [ currentPCB + 4 ] = [physicalSP]; // Save IP of current process in the PCB from the stack
@@ -24,21 +24,20 @@ physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 [ currentPCB + 13 ] = R6; 
 [ currentPCB + 14 ] = R7;
 
+////////////////////////ROUND ROBIN SCHEDULING /////////////////////////////////
 alias newPCB S3;
-//newPCB = READY_LIST + 32 * (currentPID+1);
+alias NextPID S4;
+NextPID = currentPID + 1;
+newPCB = READY_LIST + 32 * (NextPID);
 while(1) do
-	 if(currentPID > 0) then
- 	 	       currentPID = -1;
-	 endif;
-	 currentPID = currentPID + 1;
-	 if ([ currentPCB + 1 ] == 1) then 
-	 	 newPCB = READY_LIST + 32 * (currentPID);
+	 if ([ newPCB + 1 ] == 1) then 
 		 break;
 	 endif;
+	 NextPID = (NextPID + 1) % 32;
+	 newPCB = READY_LIST + 32 * (NextPID);
 endwhile;
 
-
-
+/////////////////////////RESTORING STATE FOR NEXT PID///////////////////////
 BP = [ newPCB + 2 ];
 SP = [ newPCB + 3 ];
 //set PTBR and PTLR fields of the PCB with the values in PTBR and PTLR
@@ -53,8 +52,7 @@ R4 = [ newPCB + 11 ];
 R5 = [ newPCB + 12 ];
 R6 = [ newPCB + 13 ];
 R7 = [ newPCB + 14 ];
-
-SP = SP + 1;
+SP = SP + 1;///DUE DO IP IN THE TOP OF STACK 
 alias newphysicalSP S2;
 newphysicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 [ newphysicalSP ] = [ newPCB + 4 ]; // Stores IP field value of PCB on the stack
