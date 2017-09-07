@@ -1,0 +1,66 @@
+alias physicalSP S0;
+alias System_call_NO S1;
+alias Argument1 S2;	
+physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+System_call_NO = [physicalSP - 1];
+Argument1 = [physicalSP - 3];
+///////////////////////////////////////////////////////////////
+////////////////////Open System Call///////////////////////////
+////////////////////////////////////////////////////////////////
+if (System_call_NO == 2) then
+   alias FATIndex S3;
+   FATIndex = 0;
+   while(FATIndex < 64) do
+   	if(Argument1 == [FAT + FATIndex*8]) then
+	    break;
+	endif;
+	FATIndex = FATIndex + 1;
+   endwhile;
+   if (FATIndex >= 64) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   alias FileIndex S4;			
+   FileIndex = 0;
+   while ( FileIndex <  128) do// 64 entries, each of size 2 words
+	if ([ FILE_TABLE + FileIndex] == FATIndex) then
+	   break;
+	endif;
+	FileIndex = FileIndex + 2;	// Move to next entry
+   endwhile;
+   if (FileIndex >= 128) then
+       FileIndex = 0;
+       while ( FileIndex <  128) do// 64 entries, each of size 2 words
+           if ([ FILE_TABLE + FileIndex] == -1) then
+	      break;
+       	   endif;
+	   FileIndex = FileIndex + 2;	// Move to next entry
+       endwhile;
+       if (FileIndex >= 128) then
+       	  [physicalSP - 2] = -1;
+      	  ireturn;
+       endif;
+   endif;
+   alias currentPID S5;
+   currentPID = (PTBR - 1024) / 8;
+   alias currentPCB S6;
+   currentPCB = READY_LIST + 32 * currentPID;
+   alias counter S7;
+   counter = 15;
+   while (counter <= 30) do
+      if ([READY_LIST + counter] == -1) then
+      	 [READY_LIST + counter] = FileIndex;
+	 [READY_LIST + counter + 1] = 0;
+      	 break;
+      endif;
+      counter = counter + 2;
+   endwhile;
+   if (counter > 30) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;   
+   [ FILE_TABLE + FileIndex] = FATIndex;
+   [ FILE_TABLE + FileIndex + 1] = [ FILE_TABLE + FileIndex + 1] + 1;
+   [physicalSP - 2] = (counter - 15)/2;
+   ireturn;
+endif;

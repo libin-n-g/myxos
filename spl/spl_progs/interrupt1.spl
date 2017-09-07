@@ -1,6 +1,5 @@
 alias physicalSP S0;
 alias System_call_NO S1;
-alias ReturnValue S3;
 alias Argument1 S2;	
 physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 System_call_NO = [physicalSP - 1];
