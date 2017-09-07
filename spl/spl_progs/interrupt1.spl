@@ -1,0 +1,154 @@
+alias physicalSP S0;
+alias System_call_NO S1;
+alias ReturnValue S3;
+alias Argument1 S2;	
+physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+System_call_NO = [physicalSP - 1];
+Argument1 = [physicalSP - 3];
+//////////////////////////////////////////////////////////////////////
+ ////////////////*********CREATE SYS CALL**************////////////////
+ /////////////////////////////////////////////////////////////////////
+if (System_call_NO == 1) then
+   //Argument 1 is filename
+
+////////FAT is searched for file having same filename //////////////////////////
+   alias FileIndex S4;
+   FileIndex = 0;
+   while(FileIndex < 64) do
+   	if(Argument1 == [FAT + FileIndex*8]) then
+	    [physicalSP - 2] = 0;
+	    ireturn;
+	endif;
+	FileIndex = FileIndex + 1;
+   endwhile;
+//////////////DISK FREE LIST IS SEARCHED FOR FINDING FREE BLOCK////////////////
+   alias BlockNo S5;
+   BlockNo = 0;
+   while(BlockNo < 448 ) do // Blocks 448 - 511 are reserved for swap area
+   	if([DISK_LIST + BlockNo] == 0) then
+	     break;
+	endif;
+	BlockNo = BlockNo + 1;
+   endwhile;
+   //***************IF NO BLOCK IS FREE -1 IS RETURNED*******************//
+   if (BlockNo == 448) then
+      [physicalSP - 2] = -1;
+      ireturn;      
+   endif;
+//////////// FINDING FREE ENTRY IN FAT //////////////
+   FileIndex = 0;
+   while(FileIndex < 64) do
+   	if([FAT + FileIndex*8 + 2] == -1) then
+	     [FAT + FileIndex*8] = Argument1;
+	     [FAT + FileIndex*8 + 1] = 0;
+	     [FAT + FileIndex*8 + 2] = BlockNo;
+	     break;
+	endif;
+	FileIndex = FileIndex + 1;
+   endwhile;
+//**************RETURN -1 IF THERE IS NO FREE ENTRY IN FAT****************//
+   if (FileIndex == 64) then 
+      [physicalSP - 2] = -1;
+      ireturn;      
+   endif;
+/////// LOAD DISK BLOCK(FREE) TO SCRACHPAD//////////////// 
+   load(1, BlockNo);
+////////SET ALL WORDS IN BASIC BLOCK IS SET TO -1/////////////////////
+   alias index S6;
+   index = 0;
+   while(index < 512) do
+      [SCRATCHPAD + index] = -1;
+      index = index + 1;
+   endwhile;
+/////////STORE BASIC BLOCK BACK TO DISK/////////////////////
+   store(1,BlockNo);
+/////SET DISK FREE LIST ENTRY CORRESPONDING TO BLOCK STORED////////////////
+   [DISK_LIST + BlockNo] = 1 ;
+///// STORE FAT AND FREE DISK LIST BACK TO DISK//////////////////
+   store(5, 19);
+   store(6, 20);
+   [physicalSP - 2] = 0;
+   ireturn;         
+endif;
+
+////////////////////////////////////////////////////////////////////////
+////////////////**********DELETE SYS CALL **********/////////////////////
+///////////////////////////////////////////////////////////////////////
+if (System_call_NO == 4) then
+   //////// CHECK FILE TO BE DELETED EXISTS OR NOT //////////////////
+   alias FileIndex S4;
+   FileIndex = 0;
+   while(FileIndex < 64) do
+   	if(Argument1 == [FAT + FileIndex*8]) then
+	    break;
+	endif;
+	FileIndex = FileIndex + 1;
+   endwhile;
+   if (FileIndex >= 64) then
+      [physicalSP - 2] = -1;//FILE DOES NOT EXIST
+      ireturn;
+   endif;
+   /////////////CHECKING FILE IS OPEN OR NOT BY SEARCHING System Wide Open File Table/////////// 
+   alias counter S5;			
+   counter = 0;
+   while ( counter <  128) do// 64 entries, each of size 2 words
+	if ([ FILE_TABLE + counter + 0] == FileIndex) then
+	   [physicalSP - 2] = -1;//FILE IS OPEN
+      	   ireturn;
+	endif;
+	counter = counter + 2;	// Move to next entry
+   endwhile;
+   /////// LOAD BASIC DISK BLOCK TO SCRACHPAD//////////////// 
+   load(1, [FAT + FileIndex*8 + 2]);
+   alias Datablock S6;
+   counter = 0;
+   while (counter < 256) do
+   	 if ([SCRATCHPAD + counter] != -1) then 
+   	    Datablock = [SCRATCHPAD + counter];
+///////////////***load DATA BLOCK TO SCRACHPAD***********
+   	    load(1, Datablock);
+	    ////////// STORING EMPTY STRING IN DATA BLOCK
+	    alias index S7;
+	    index = 0;
+	    while (index < 512) do 
+	       [SCRATCHPAD + index] = "";
+	       index = index + 1;
+	    endwhile;
+	    //STORE BACK DATA BLOCK TO DISK
+	    store(1, Datablock);
+	    // SET DATABLOCK ENTRY TO 0 IN DISK FREE LIST
+	    [DISK_LIST + Datablock] = 0 ;
+	    //LOAD BASIC BLOCK IN BACK TO SCRACHPAD
+	    load(1, [FAT + FileIndex*8 + 2]);
+	 else
+	    break; /// BREAK IN CASE OF FINDING -1 (END OF DATABLOCK)
+	 endif;
+	 counter = counter + 1;
+   endwhile;
+   //////// ERASE ALL VALUES IN BASIC BLOCK/////////////////
+   counter = 0;
+   while (counter < 512) do
+   	 [SCRATCHPAD + counter] = "";
+	 counter = counter + 1;
+   endwhile;
+   alias blockno S6;
+   blockno = [FAT + FileIndex*8 + 2];
+   
+   //STORE BASIC BLOCK BACK TO DISK
+   store(1,blockno);
+   
+   //SETTING BASIC BLOCK ENTRY IN DISK FREE LIST TO 0
+   [DISK_LIST + blockno] = 0 ;
+   
+   //CLEARING FAT ENTRY
+   [FAT + FileIndex*8] = -1;
+   [FAT + FileIndex*8 + 1] = 0;
+   [FAT + FileIndex*8 + 2] = -1;
+   
+   ///// STORE FAT AND FREE DISK LIST BACK TO DISK//////////////////
+   store(5, 19);
+   store(6, 20);
+   [physicalSP - 2] = 0;
+   ireturn;
+   
+endif;
