@@ -1,0 +1,71 @@
+alias physicalSP S0;
+alias System_call_NO S1;
+alias Argument1 S2;
+alias Argument2 S3;
+physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+System_call_NO = [physicalSP - 1];
+Argument1 = [physicalSP - 4];
+Argument2 = [physicalSP - 3];
+///////////////////////////////////////////////////////////////
+////////////////////Write System Call///////////////////////////
+////////////////////////////////////////////////////////////////
+if (System_call_NO == 5) then
+   //CHECK  FOR VALID FILE DESCRIPTOR
+   if ( (Argument1 < 0) ||(Argument1 > 7)) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   alias currentPID S5;
+   currentPID = (PTBR - 1024) / 8;
+   alias currentPCB S6;
+   currentPCB = READY_LIST + 32 * currentPID;
+   ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
+   alias FileIndex S4;
+   alias LSEEK S7;
+   if ([currentPCB + 15 + Argument1]== -1) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   else
+      FileIndex = [currentPCB + 15 + 2*Argument1];
+      LSEEK = [currentPCB + 16 + 2*Argument1];
+   endif;
+   alias FATIndex S8;
+   FATIndex = [ FILE_TABLE + FileIndex];
+   alias BasicBlock S5;
+   BasicBlock = [FAT + 8 * FATIndex + 2];
+   load(1, BasicBlock);
+   alias DataBlock S9; 
+   if ([SCRATCHPAD + (LSEEK/512) ] == -1) then
+//////////////DISK FREE LIST IS SEARCHED FOR FINDING FREE BLOCK////////////////
+       
+       DataBlock = 0;
+       while(DataBlock < 448 ) do // Blocks 448 - 511 are reserved for swap area
+           if([DISK_LIST + DataBlock] == 0) then
+	   	break;
+       	   endif;
+       	   DataBlock = DataBlock + 1;
+       endwhile;
+       if (DataBlock >= 448) then
+             [physicalSP - 2] = -1;
+      	     ireturn;
+       endif;
+       [DISK_LIST + DataBlock] = 1;
+       // ALLOCATING DATABLOCK NUMBER IN BASIC BLOCK
+       [SCRATCHPAD + (LSEEK/512) ] = DataBlock;
+       store(1, BasicBlock);
+       [FAT + 8 * FATIndex + 1] = [FAT + 8 * FATIndex + 1] + 512;//INCREASING SIZE
+       ///// STORE FAT AND FREE DISK LIST BACK TO DISK//////////////////
+       store(5, 19);
+       store(6, 20);
+   endif;
+   //DATA BLOCK NUMBER IS STORED (VALID)
+   DataBlock = [SCRATCHPAD + (LSEEK/512) ];
+   load(1, DataBlock);
+   alias Offset S10;
+   Offset = (LSEEK%512);
+   [SCRATCHPAD + Offset ] = Argument2;// WORD TO WRITE
+   store(1, DataBlock);
+   [currentPCB + 16 + 2*Argument1] = LSEEK + 1;//INCREMENT LSEEK
+   [physicalSP - 2] = 0;
+   ireturn;
+endif;
