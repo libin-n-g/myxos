@@ -15,6 +15,9 @@ integer main()
 	status = Open("myfile.dat");
 	print ("Open 2");
 	print(status);
+	status = Close(status);
+	print("Close 2");
+	print(status);
 	status = Open("myfile.dat");
 	print ("Open3 ");
 	print(status);

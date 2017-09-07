@@ -8,6 +8,7 @@ Argument1 = [physicalSP - 3];
 ////////////////////Open System Call///////////////////////////
 ////////////////////////////////////////////////////////////////
 if (System_call_NO == 2) then
+///////////////FINDS INDEX OF GIVEN FILE IN FAT//////////
    alias FATIndex S3;
    FATIndex = 0;
    while(FATIndex < 64) do
@@ -20,37 +21,41 @@ if (System_call_NO == 2) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
+///////////////////FINDS FILE INDEX IN SYSTEM WIDE OPEN FILE TABLE/////////
    alias FileIndex S4;			
    FileIndex = 0;
    while ( FileIndex <  128) do// 64 entries, each of size 2 words
 	if ([ FILE_TABLE + FileIndex] == FATIndex) then
-	   break;
+	   break; //FILE IS ALL READY OPEN
 	endif;
 	FileIndex = FileIndex + 2;	// Move to next entry
    endwhile;
    if (FileIndex >= 128) then
-       FileIndex = 0;
+       FileIndex = 0; ///FILE NOT OPEN
        while ( FileIndex <  128) do// 64 entries, each of size 2 words
            if ([ FILE_TABLE + FileIndex] == -1) then
-	      break;
+	      break; //FREE ENTRY IN SYSTEM WIDE OPEN FILE TABLE
        	   endif;
 	   FileIndex = FileIndex + 2;	// Move to next entry
        endwhile;
        if (FileIndex >= 128) then
-       	  [physicalSP - 2] = -1;
+       	  [physicalSP - 2] = -1;//SYSTEM WIDE OPEN FILE TABLE FULL
       	  ireturn;
        endif;
    endif;
+   
    alias currentPID S5;
    currentPID = (PTBR - 1024) / 8;
    alias currentPCB S6;
    currentPCB = READY_LIST + 32 * currentPID;
+   
+   /////// ADDING ENTRY TO PER PROCESS OPEN FILE TABLE
    alias counter S7;
    counter = 15;
    while (counter <= 30) do
-      if ([READY_LIST + counter] == -1) then
-      	 [READY_LIST + counter] = FileIndex;
-	 [READY_LIST + counter + 1] = 0;
+      if ([currentPCB + counter] == -1) then
+      	 [currentPCB + counter] = FileIndex;
+	 [currentPCB + counter + 1] = 0;
       	 break;
       endif;
       counter = counter + 2;
@@ -58,9 +63,45 @@ if (System_call_NO == 2) then
    if (counter > 30) then
       [physicalSP - 2] = -1;
       ireturn;
-   endif;   
+   endif;
+   
+   /////SETTING UP SYSTEM WIDE OPEN FILE TABLE////////////
    [ FILE_TABLE + FileIndex] = FATIndex;
    [ FILE_TABLE + FileIndex + 1] = [ FILE_TABLE + FileIndex + 1] + 1;
-   [physicalSP - 2] = (counter - 15)/2;
+   [physicalSP - 2] = (counter - 15)/2;//INDEX OF PER PROCESS OPEN FILE TABLE
    ireturn;
+endif;
+
+////////////////////////////////////////////////////////////////////////////
+/////////////////// CLOSE SYSTEM CALL //////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+if (System_call_NO == 3) then
+   //CHECK  FOR VALID FILE DESCRIPTOR
+   if ( (Argument1 < 0) ||(Argument1 > 7)) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   alias currentPID S5;
+   currentPID = (PTBR - 1024) / 8;
+   alias currentPCB S6;
+   currentPCB = READY_LIST + 32 * currentPID;
+   ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
+   alias FileIndex S3;
+   if ([currentPCB + 15 + Argument1]== -1) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   else
+      FileIndex = [currentPCB + 15 + 2*Argument1];
+   endif;
+   ////////REDUCE NUMBER OF OPEN FILES BY 1/////////////////
+   [ FILE_TABLE + FileIndex + 1] = [ FILE_TABLE + FileIndex + 1] - 1;
+   ///////////////INVALIDATE FAT INDEX IN SYS WIDE OPEN FILE TABLE IN CASE OF OPEN FILES ARE ZERO
+   if ([ FILE_TABLE + FileIndex + 1] == 0) then
+      [ FILE_TABLE + FileIndex] = -1;
+   endif;
+   /////INVALIDATING PER PROCESS FILE TABLE
+   [currentPCB + 15 + 2*Argument1] = -1;
+   [currentPCB + 15 + 2*Argument1 + 1] = -1;
+   [physicalSP - 2] = 0;
+   ireturn;   
 endif;
