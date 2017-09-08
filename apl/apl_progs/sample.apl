@@ -13,6 +13,9 @@ integer main()
 	print ("Open 1");
 	print(status);
 	status = Write(0,"qwe");
+	status = Seek(0,10);
+	print ("Seek");
+	print (status);
 	status = Write(0,"qwe");
 	print (status);
 	status = Close(1);
