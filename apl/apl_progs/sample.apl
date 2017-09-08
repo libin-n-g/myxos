@@ -3,6 +3,7 @@ decl
 enddecl
 integer main()
 {
+	string b;
 	status = Create("myfile.dat");
 	print ("Status1 ");
 	print(status);
@@ -18,6 +19,9 @@ integer main()
 	print (status);
 	status = Write(0,"qwe");
 	print (status);
+	status = Seek(0,10);
+	status = Read(0,b);
+	print(b);
 	status = Close(1);
 	print("Close 1");
 	print(status);

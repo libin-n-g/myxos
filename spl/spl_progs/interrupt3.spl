@@ -42,3 +42,52 @@ if (System_call_NO == 6) then
    [physicalSP - 2] = 0;
    ireturn;         
 endif;
+
+///////////////////////////////////////////////////////////////
+////////////////////Read System Call///////////////////////////
+////////////////////////////////////////////////////////////////
+if (System_call_NO == 7) then
+   //CHECK  FOR VALID FILE DESCRIPTOR
+   if ( (Argument1 < 0) ||(Argument1 > 7)) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   alias currentPID S5;
+   currentPID = (PTBR - 1024) / 8;
+   alias currentPCB S6;
+   currentPCB = READY_LIST + 32 * currentPID;
+   ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
+   /////////////FROM PER PROCESS OPEN FILE
+   alias FileIndex S4;
+   alias LSEEK S7;
+   if ([currentPCB + 15 + Argument1]== -1) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   else
+      FileIndex = [currentPCB + 15 + 2*Argument1];
+      LSEEK = [currentPCB + 16 + 2*Argument1];
+   endif;
+   ///GETTING FAT ENTRY INDEX FROM PER PROCESS OPEN FILE TABLE
+   alias FATIndex S8;
+   FATIndex = [ FILE_TABLE + FileIndex];
+   alias BasicBlock S5;
+   ////GETTING FAT ENTRIES (FILESIZE AND BASICBLOCK)
+   BasicBlock = [FAT + 8 * FATIndex + 2];
+   alias FileSize S9;
+   FileSize = [FAT + 8 * FATIndex + 1];
+   if (FileSize <= LSEEK) then ///LSEEK IS EQUAL TO EOF
+      [physicalSP - 2] = -1;
+      ireturn;      
+   endif;
+   ///LOADING BASIC BLOCK TO SCRACHPAD
+   load(1, BasicBlock);
+   alias DataBlock S10;
+   DataBlock = [SCRATCHPAD + (LSEEK/512) ];
+   load(1, DataBlock);//LOADING DATA BLOCK TO SCRACHPAD
+   ///STORING READ WORD TO ARGUMENT 2
+   [physicalSP - 3] = [SCRATCHPAD + (LSEEK%512) ];
+   ////INCREMENTING LSEEK
+   [currentPCB + 16 + 2*Argument1] = LSEEK + 1;
+   [physicalSP - 2] = 0;
+   ireturn;
+endif;
