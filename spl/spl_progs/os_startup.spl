@@ -41,6 +41,7 @@ while ( counter <  128) do			// 64 entries, each of size 2 words
 	counter = counter + 2;			// Move to next entry
 endwhile;
 
+/////SETTING UP PAGE TABLE/////////////////////////////
 PTBR = 1024;
 PTLR = 4;
 [PTBR + 0] = 25; // Physical Page Number for Logical Page 0
@@ -58,7 +59,22 @@ while (counter <= 30) do
       [READY_LIST + counter + 1] = -1;//set invalid LSEEK position
       counter = counter + 2;
 endwhile;
-
+///////////////////////SETTING UP MEMORY FREE LIST/////////////
+counter = 0;
+while (counter < 64) do
+      if (counter <= 28) then
+      	 [MEM_LIST + counter] = 1;
+      else
+	 [MEM_LIST + counter] = 0;	
+      endif;
+      counter = counter + 1;
+endwhile;
+////////////SETTING UP PCB STATUS FOR ALL PROCESS//////////////////
+counter = 0;
+while (counter < 1024) do
+      [READY_LIST + counter + 1] = 0;
+      counter = counter + 32;
+endwhile;
 [READY_LIST + 1] = 2; // Sets the entry for STATE as Running
 SP = 3 * 512;
 [28 * 512] = 0; // Set up the IP value for INIT in the stack

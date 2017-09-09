@@ -29,12 +29,15 @@ alias newPCB S3;
 alias NextPID S4;
 NextPID = currentPID + 1;
 newPCB = READY_LIST + 32 * (NextPID);
-while(1) do
-	 if ([ newPCB + 1 ] == 1) then 
-		 break;
+alias counter S5;
+counter = 0;
+while(counter < 31) do
+	 if ([ newPCB + 1 ] == 1) then
+	    break;
 	 endif;
 	 NextPID = (NextPID + 1) % 32;
 	 newPCB = READY_LIST + 32 * (NextPID);
+	 counter = counter + 1;
 endwhile;
 
 /////////////////////////RESTORING STATE FOR NEXT PID///////////////////////
