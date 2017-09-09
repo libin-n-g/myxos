@@ -2,4 +2,6 @@ language: none
 build:
   ci:
     - chmod +x run.sh
-    - ./run.sh
+    - ./run.sh > out.txt
+  on_success:
+  	- python test.py
