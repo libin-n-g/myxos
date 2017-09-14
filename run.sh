@@ -6,4 +6,4 @@ cd ../apl
 cd ../xfs-interface/
 ./xfs-interface < Input.txt
 cd ../xsm
-./xsm --timer=1
+./xsm --timer=1 < Input.txt

@@ -1,35 +1,87 @@
 decl
-	integer status;
+	integer status, fp, pos;
 enddecl
 integer main()
 {
-	string b;
-	status = Create("myfile.dat");
-	print ("Status1 ");
-	print(status);
-	status = Open("myfile.dat");
-	print ("Open 0");
-	print(status);
-	status = Open("myfile.dat");
-	print ("Open 1");
-	print(status);
-	status = Write(0,"qwe");
-	status = Seek(0,10);
-	print ("Seek");
-	print (status);
-	status = Write(0,"qwe");
-	print (status);
-	status = Seek(0,10);
-	status = Read(0,b);
-	print(b);
-	status = Close(1);
-	print("Close 1");
-	print(status);
-	status = Close(0);
-	print("Close 0");
-	print(status);
-	status = Delete("even.xsm");
-	print ("Status2 ");
-	print(status);
+	string b, filename;
+	integer option;
+	option = 1;
+	while(option!=0) do
+	    print("Enter Option");
+	    print("File SYSCall");
+	    print("1-Create");
+	    print("2-Delete");
+	    print("3-Open");
+	    print("4-Close");
+	    print("5-Read");
+	    print("6-Write");
+	    print("7-Seek");
+	    print("0-exit");
+	    read(option);
+	    if (option==1) then
+	       print("Enter");
+	       print("FileName");
+	       read(filename);
+	       status = Create(filename);
+	       print("Status");
+	       print(status);
+	    endif;
+	    if (option==2) then
+	       print("Enter");
+	       print("FileName");
+	       read(filename);
+	       status = Delete(filename);
+	       print("Status");
+	       print(status);
+	    endif;
+	    if (option==3) then
+	       print("Enter");
+	       print("FileName");
+	       read(filename);
+	       status = Open(filename);
+	       print("filePointer");
+	       print(status);
+	    endif;
+	    if (option==4) then
+	       print("Enter");
+	       print("Filepointer");
+	       read(fp);
+	       status = Close(fp);
+	       print("filePointer");
+	       print(status);
+	    endif;
+	    if (option==5) then
+	       print("Enter");
+	       print("FilePointer");
+	       read(fp);
+	       status = Read(fp,b);
+	       print("Status");
+	       print(status);
+	       print("Word read");
+	       print(b);
+	    endif;
+	    if (option==6) then
+	       print("Enter");
+	       print("FilePointer");
+	       read(fp);
+	       print("Enter Word");
+	       print("To Write");
+	       read(b);
+	       status = Write(fp,b);
+	       print("Status");
+	       print(status);
+	    endif;	  
+	    if (option==7) then
+	       print("Enter");
+	       print("FilePointer");
+	       read(fp);
+	       print("Enter position");
+	       print("To seek");
+	       read(pos);
+	       status = Seek(fp,pos);
+	       print("Status");
+	       print(status);
+	    endif;
+	endwhile;
 	return 0;
 }
