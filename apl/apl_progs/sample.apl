@@ -4,6 +4,7 @@ enddecl
 integer main()
 {
 	string b;
+	integer pid;
 	status = Create("myfile.dat");
 	print ("Status1 ");
 	print(status);
@@ -31,5 +32,12 @@ integer main()
 	status = Delete("even.xsm");
 	print ("Status2 ");
 	print(status);
+	print ("Before Fork");
+	breakpoint;
+	pid = Fork();
+	breakpoint;
+	print(pid);
+	breakpoint;
+	print ("After Fork");
 	return 0;
 }

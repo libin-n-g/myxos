@@ -2,7 +2,7 @@ Running
 Unix-XFS Interace Version 1.0. 
 Type "help" for  getting a list of commands.
 # Formatting Complete. "disk.xfs" created.
-# # # # # # # # # # # 0 	 - 	 1  
+# # # # # # # # # # # # 0 	 - 	 1  
 1 	 - 	 1  
 2 	 - 	 1  
 3 	 - 	 1  
@@ -533,4 +533,9 @@ Close 0
 0
 Status2 
 0
+Before Fork
+-2
+1
+After Fork
+After Fork
 Machine is halting

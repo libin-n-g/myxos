@@ -1,0 +1,130 @@
+alias physicalSP S0;
+alias System_call_NO S1;	
+physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+System_call_NO = [physicalSP - 1];
+/////////////////////////////////////////////////////////////////////////
+/////////////////FORK SYS CALL//////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+if (System_call_NO==8) then
+   alias newPCB S2;
+   alias PID S3;
+   PID = 0;
+   newPCB = READY_LIST;
+   while(PID < 32) do
+      if ([ newPCB + 1 ] == 0) then
+      	 break;
+      endif;
+      PID = PID + 1;
+      newPCB = newPCB + 32;
+   endwhile;
+   if (PID >= 32) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   [newPCB] = PID;
+   //////////////////////////////////////////////////////////////////
+   alias counter S4;
+   alias Num_Page S5;
+   alias Valid_page S8;
+   Valid_page = 0;
+   Num_Page = 0;
+   counter = 0;
+   while(counter < PTLR) do
+      if([PTBR + counter]== -1) then
+         counter = counter + 1;
+         continue;
+      endif;
+      while (Num_Page < 64) do
+      	 if ([MEM_LIST + Num_Page] == 0) then
+      	    [SCRATCHPAD + Valid_page] = Num_Page;
+	    Valid_page = Valid_page + 1;
+	    Num_Page = Num_Page + 1;
+	    break;
+         endif;
+      	 Num_Page = Num_Page + 1;
+      endwhile;
+      if (Num_Page == 64) then
+         [physicalSP - 2] = -1;
+      	 ireturn;      	 
+      endif;
+      counter = counter + 1;
+   endwhile;
+   //////////////////////////////////////////////////
+   counter = 0;
+   while (counter < Valid_page) do
+      Num_Page = [SCRATCHPAD + Num_Page];
+      [MEM_LIST + Num_Page] = 1;
+      counter = counter + 1;
+   endwhile;
+   //////////////////////////////////////////////////////
+   alias Child_Page S6;
+   alias Parent_Page S7;
+   Num_Page = 0;
+   Valid_page = 0;
+   while (Num_Page < PTLR) do
+      if([PTBR + Num_Page] == -1) then
+         Num_Page = Num_Page + 1;
+         continue;
+      endif;
+      Child_Page = [SCRATCHPAD + Valid_page] * 512;
+      Parent_Page = [PTBR + Num_Page*2] * 512;
+      if ([PTBR + Num_Page*2] != -1) then
+         counter = 0;
+      	 while (counter < 512) do
+	    [Child_Page + counter] = [Parent_Page + counter];
+	    counter = counter + 1;
+      	 endwhile;
+      endif;
+      Valid_page = Valid_page + 1;
+      Num_Page = Num_Page + 1;
+   endwhile;
+   ///////////////////////////////////////////////////////
+   alias Child_PTBR S6;
+   Child_PTBR = 1024 + PID * 8;
+   counter = 0;
+   Valid_page = 0;
+   while(counter< PTLR) do
+      if ([PTBR + counter]==-1) then
+        [Child_PTBR + counter*2] = -1;
+      else
+	[Child_PTBR + counter*2] =  [SCRATCHPAD + Valid_page];
+	Valid_page = Valid_page + 1;
+      endif;
+      [Child_PTBR + counter*2 + 1] =  [PTBR + counter*2 + 1];
+      counter = counter + 1;
+   endwhile;
+   [newPCB + 5] = Child_PTBR;
+   [newPCB + 4] = [physicalSP];
+   [newPCB + 3] = (SP - 1);
+   [newPCB + 2] = BP;
+   [newPCB + 6] = PTLR;
+   [newPCB + 7] = R0;
+   [newPCB + 8] = R1;
+   [newPCB + 9] = R2;
+   [newPCB + 10] = R3;
+   [newPCB + 11] = R4;
+   [newPCB + 12] = R5;
+   [newPCB + 13] = R6;
+   [newPCB + 14] = R7;
+   alias CurrentPID S5;
+   CurrentPID = (PTBR - 1024)/8;
+   alias CurrentPCB S6;
+   alias FileIndex S7;
+   CurrentPCB = READY_LIST + 32*CurrentPID;
+   counter = 15;
+   while (counter <= 30) do
+      FileIndex = [CurrentPCB + counter];
+      [newPCB + counter] = FileIndex;
+      if (FileIndex!= -1) then
+      	 [FILE_TABLE + 2*FileIndex + 1] = [FILE_TABLE + 2*FileIndex + 1] + 1;
+      endif;
+      [newPCB + counter + 1] = [CurrentPCB + counter + 1];
+      counter = counter + 2;
+   endwhile;
+   [physicalSP - 2] = PID;
+   physicalSP = ([1024 + (PID*8) + 2 * ((SP-1) / 512)] * 512) + ((SP-1) % 512);
+   [physicalSP - 1] = -2;
+   [newPCB + 1] = 1;
+   breakpoint;
+   ireturn;
+endif;
