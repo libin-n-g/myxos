@@ -518,7 +518,6 @@ Type "help" for  getting a list of commands.
 No of Free Blocks = 484
 Total no of Blocks = 512# Filename: even.xsm   Filesize: 512
 Filename: loop.xsm   Filesize: 512
-# Status1 
 # Enter Option
 File SYSCall
 1-Create
