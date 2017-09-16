@@ -1,0 +1,86 @@
+alias physicalSP S0;
+alias System_call_NO S1;
+physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+System_call_NO = [physicalSP - 1];
+///////////////////////////////////////////////////////////////////////////
+///////////////// EXIT SYS CALL////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+if (System_call_NO == 10) then
+   alias Current_PCB S2;
+   alias Ready_Process S5;
+   alias counter S4;
+   counter = 0;
+   breakpoint;
+   Ready_Process = -1;
+   while(counter < 32) do
+	 if ([ READY_LIST + 32 * counter + 1 ] == 1) then
+	    Ready_Process = counter;
+	 endif;
+	 if ([ READY_LIST + 32 * counter + 1 ] == 2) then
+	    Current_PCB = READY_LIST + 32 * counter;
+	 endif;
+	 counter = counter + 1;
+   endwhile;
+   if (Ready_Process == -1) then
+      halt;
+   endif;
+   alias FileIndex S3;
+   ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
+   counter = 0;
+   while(counter < 8) do
+      if ([Current_PCB + 15 + 2*counter]== -1) then
+         counter = counter + 1;
+         continue;
+      else
+         FileIndex = [Current_PCB + 15 + 2*counter];
+      endif;
+      ////////REDUCE NUMBER OF OPEN FILES BY 1/////////////////
+      [ FILE_TABLE + FileIndex + 1] = [ FILE_TABLE + FileIndex + 1] - 1;
+//////INVALIDATE FAT INDEX IN SYS WIDE OPEN FILE TABLE IN CASE OF OPEN FILES ARE ZERO
+      if ([ FILE_TABLE + FileIndex + 1] == 0) then
+      	 [ FILE_TABLE + FileIndex] = -1;
+      endif;
+      /////INVALIDATING PER PROCESS FILE TABLE
+      [Current_PCB + 15 + 2*counter] = -1;
+      [Current_PCB + 15 + 2*counter + 1] = -1;
+      counter = counter + 1;
+   endwhile;
+   ///////////////////////////////////////
+   [Current_PCB + 1 ] = 0;
+   //////////////////////////////////////////////
+   counter = 0;
+   alias page_NO S3;
+   while(counter < PTLR) do
+      page_NO = [PTBR + counter*2];
+      if (page_NO!=-1) then
+      	 [MEM_LIST + page_NO] = 0;
+      endif;
+      [PTBR + counter*2]=-1;
+      [PTBR + counter*2 + 1]="00";
+      counter = counter + 1;
+   endwhile;
+   /////////////////////////RESTORING STATE FOR NEXT PID///////////////////////
+   alias newPCB S3;
+   newPCB =  READY_LIST + 32 * Ready_Process ;
+   BP = [ newPCB + 2 ];
+   SP = [ newPCB + 3 ];
+   //set PTBR and PTLR fields of the PCB with the values in PTBR and PTLR
+   PTBR = [ newPCB + 5 ];
+   PTLR = [ newPCB + 6 ];
+   //save the registers R0 to R7 in the respective fields of the PCB.
+   R0 = [ newPCB + 7 ];
+   R1 = [ newPCB + 8 ];
+   R2 = [ newPCB + 9 ];
+   R3 = [ newPCB + 10 ];
+   R4 = [ newPCB + 11 ];
+   R5 = [ newPCB + 12 ];
+   R6 = [ newPCB + 13 ];
+   R7 = [ newPCB + 14 ];
+   SP = SP + 1;///DUE DO IP IN THE TOP OF STACK 
+   alias newphysicalSP S2;
+   newphysicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+   [ newphysicalSP ] = [ newPCB + 4 ]; // Stores IP field value of PCB on the stack
+   [ newPCB + 1 ] = 2; // Set STATE to RUNNING
+   breakpoint;
+   ireturn;
+endif;

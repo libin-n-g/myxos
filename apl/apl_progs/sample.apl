@@ -5,6 +5,7 @@ integer main()
 {
 	string b;
 	integer pid;
+	pid = 0;
 	status = Create("myfile.dat");
 	print ("Status1 ");
 	print(status);
@@ -29,15 +30,16 @@ integer main()
 	status = Close(0);
 	print("Close 0");
 	print(status);
-	status = Delete("even.xsm");
+	
 	print ("Status2 ");
 	print(status);
 	print ("Before Fork");
-	breakpoint;
 	pid = Fork();
-	breakpoint;
-	print(pid);
-	breakpoint;
+	if (pid==-2) then
+	   status = Exec("even.xsm");
+	endif;
 	print ("After Fork");
+	status = Exec("even.xsm");
+	Exit();
 	return 0;
 }
