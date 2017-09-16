@@ -12,6 +12,7 @@ if (System_call_NO == 10) then
    counter = 0;
    breakpoint;
    Ready_Process = -1;
+   ///////FINDING RUNNING AND READY PROCESS/////////////// 
    while(counter < 32) do
 	 if ([ READY_LIST + 32 * counter + 1 ] == 1) then
 	    Ready_Process = counter;
@@ -21,9 +22,11 @@ if (System_call_NO == 10) then
 	 endif;
 	 counter = counter + 1;
    endwhile;
+   ////////////HALT IN CASE OF NO READY PROCESS///////////////
    if (Ready_Process == -1) then
       halt;
    endif;
+   ////////////////CLOSING ALL FILES OPENED BY RUNNING(CURRENT) PROCESS
    alias FileIndex S3;
    ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
    counter = 0;
@@ -45,9 +48,9 @@ if (System_call_NO == 10) then
       [Current_PCB + 15 + 2*counter + 1] = -1;
       counter = counter + 1;
    endwhile;
-   ///////////////////////////////////////
+   //////////////////////SETTING STATE TO TERMINATED/////////////////
    [Current_PCB + 1 ] = 0;
-   //////////////////////////////////////////////
+   ////////FREEING PAGES USED BY CURRENT PROCESS AND INVALIDATING PAGE TABLE////////
    counter = 0;
    alias page_NO S3;
    while(counter < PTLR) do
