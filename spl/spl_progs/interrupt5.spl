@@ -10,6 +10,7 @@ if (System_call_NO==8) then
    alias PID S3;
    PID = 0;
    newPCB = READY_LIST;
+   ////////////////////Search Readylist of PCBs for STATE 0
    while(PID < 32) do
       if ([ newPCB + 1 ] == 0) then
       	 break;
@@ -17,10 +18,12 @@ if (System_call_NO==8) then
       PID = PID + 1;
       newPCB = newPCB + 32;
    endwhile;
+   //////////////////////NO FREE SLOT IN READY LIST OF PCB
    if (PID >= 32) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
+   ///ASSIGN PID TO PCB SLOT
    [newPCB] = PID;
    //////////////////////////////////////////////////////////////////
    alias counter S4;
@@ -29,12 +32,19 @@ if (System_call_NO==8) then
    Valid_page = 0;
    Num_Page = 0;
    counter = 0;
+   ////////////////////DUPLICATING PAGES FOR NEW PROCESS
    while(counter < PTLR) do
-      if([PTBR + counter]== -1) then
+      if([PTBR + 2*counter]== -1) then
          counter = counter + 1;
          continue;
       endif;
+      /////////////////////FAIL IF MEMORY NOT AVAALIABLE FOR COPING PAGES
+      if (Num_Page == 64) then
+         [physicalSP - 2] = -1;
+      	 ireturn;      	 
+      endif;
       while (Num_Page < 64) do
+      ///////////////////////CHECKING FOR FREE MEM SLOTS IN MEMORY FREE LIST
       	 if ([MEM_LIST + Num_Page] == 0) then
       	    [SCRATCHPAD + Valid_page] = Num_Page;
 	    Valid_page = Valid_page + 1;
@@ -43,26 +53,22 @@ if (System_call_NO==8) then
          endif;
       	 Num_Page = Num_Page + 1;
       endwhile;
-      if (Num_Page == 64) then
-         [physicalSP - 2] = -1;
-      	 ireturn;      	 
-      endif;
       counter = counter + 1;
    endwhile;
-   //////////////////////////////////////////////////
+   ////////////////////UPDATE MEMORY FREE LIST//////////////////////////////
    counter = 0;
    while (counter < Valid_page) do
-      Num_Page = [SCRATCHPAD + Num_Page];
+      Num_Page = [SCRATCHPAD + counter];
       [MEM_LIST + Num_Page] = 1;
       counter = counter + 1;
    endwhile;
-   //////////////////////////////////////////////////////
+   /////////////////////COPY PAGES ////////////////////////////
    alias Child_Page S6;
    alias Parent_Page S7;
    Num_Page = 0;
    Valid_page = 0;
    while (Num_Page < PTLR) do
-      if([PTBR + Num_Page] == -1) then
+      if([PTBR + 2*Num_Page] == -1) then
          Num_Page = Num_Page + 1;
          continue;
       endif;
@@ -81,10 +87,11 @@ if (System_call_NO==8) then
    ///////////////////////////////////////////////////////
    alias Child_PTBR S6;
    Child_PTBR = 1024 + PID * 8;
+   //////////SETUPING PAGE TABLE FOR CHILD PROCESS 
    counter = 0;
    Valid_page = 0;
    while(counter< PTLR) do
-      if ([PTBR + counter]==-1) then
+      if ([PTBR + 2*counter]==-1) then
         [Child_PTBR + counter*2] = -1;
       else
 	[Child_PTBR + counter*2] =  [SCRATCHPAD + Valid_page];
@@ -93,6 +100,7 @@ if (System_call_NO==8) then
       [Child_PTBR + counter*2 + 1] =  [PTBR + counter*2 + 1];
       counter = counter + 1;
    endwhile;
+   /////////SETUP PCB FOR CHILD PROCESS////////////////////
    [newPCB + 5] = Child_PTBR;
    [newPCB + 4] = [physicalSP];
    [newPCB + 3] = (SP - 1);
@@ -106,6 +114,7 @@ if (System_call_NO==8) then
    [newPCB + 12] = R5;
    [newPCB + 13] = R6;
    [newPCB + 14] = R7;
+   //////////////////COPING PER PROCESS OPEN FILE TABLE///////////////
    alias CurrentPID S5;
    CurrentPID = (PTBR - 1024)/8;
    alias CurrentPCB S6;
@@ -122,9 +131,10 @@ if (System_call_NO==8) then
       counter = counter + 2;
    endwhile;
    [physicalSP - 2] = PID;
+   ////FINDING PHYSICAL SP FOR CHILD PROCESSS
+   ////AND GIVING RETURN VALUE -2  FOR CHILD
    physicalSP = ([1024 + (PID*8) + 2 * ((SP-1) / 512)] * 512) + ((SP-1) % 512);
    [physicalSP - 1] = -2;
    [newPCB + 1] = 1;
-   breakpoint;
    ireturn;
 endif;
