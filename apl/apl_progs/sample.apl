@@ -3,6 +3,7 @@ decl
 enddecl
 integer main()
 {
+
 	string b, filename;
 	integer option;
 	option = 1;
