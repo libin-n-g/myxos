@@ -2,7 +2,7 @@ Running
 Unix-XFS Interace Version 1.0. 
 Type "help" for  getting a list of commands.
 # Formatting Complete. "disk.xfs" created.
-# # # # # # # # # # # # # # 0 	 - 	 1  
+# # # # # # # # # # # 0 	 - 	 1  
 1 	 - 	 1  
 2 	 - 	 1  
 3 	 - 	 1  
@@ -28,8 +28,8 @@ Type "help" for  getting a list of commands.
 23 	 - 	 1  
 24 	 - 	 1  
 25 	 - 	 1  
-26 	 - 	 1  
-27 	 - 	 1  
+26 	 - 	 0  
+27 	 - 	 0  
 28 	 - 	 0  
 29 	 - 	 0  
 30 	 - 	 0  
@@ -515,10 +515,8 @@ Type "help" for  getting a list of commands.
 510 	 - 	 0  
 511 	 - 	 0  
 
-No of Free Blocks = 484
+No of Free Blocks = 486
 Total no of Blocks = 512# Filename: even.xsm   Filesize: 512
-Filename: loop.xsm   Filesize: 512
-# Status1 
 # Enter Option
 File SYSCall
 1-Create
