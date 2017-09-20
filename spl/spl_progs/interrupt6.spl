@@ -1,0 +1,115 @@
+alias physicalSP S0;
+alias System_call_NO S1;
+alias Argument1 S2;
+physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+System_call_NO = [physicalSP - 1];
+Argument1 = [physicalSP - 3];
+///////////////////////////////////////////////////////////////////////////
+///////////////// EXCV SYS CALL////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+if (System_call_NO == 9) then
+   ////////FAT is searched for filename //////////////////////
+   alias FileIndex S3;
+   FileIndex = 0;
+   while(FileIndex < 64) do
+   	if(Argument1 == [FAT + FileIndex*8]) then
+	    break;
+	endif;
+	FileIndex = FileIndex + 1;
+   endwhile;
+   if (FileIndex >= 64) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   //////////////////////////LOAD BASIC BLOCK TO SCRACHPAD///////////////////
+   load(1, [FAT + FileIndex*8 + 2]);
+   ///////////////////COUNT NUMBER OF VALID PAGES IN NEW PROGRAM////////////////
+   alias counter S4;
+   alias Num_pages S5;
+   counter = 0;
+   Num_pages = 0;
+   while(counter < 3) do
+      if ([SCRATCHPAD + counter] != -1) then
+      	Num_pages = Num_pages + 1;
+      endif;
+      counter = counter + 1;
+   endwhile;
+   //////////////////COUNT NUMBER OF VALID PAGES IN CURRENT PROCESS///////////////
+   counter=0;
+   alias Cur_Num_pages S6;
+   Cur_Num_pages = 0;
+   while(counter < (PTLR - 1)) do
+      if([PTBR + counter*2]!=-1) then
+	 Cur_Num_pages = Cur_Num_pages + 1;
+      endif;
+      counter = counter + 1;
+   endwhile;
+   ////////////////DEALLOCATE EXTRA PAGES FROM CURRENT PROCESS//////////////
+   counter = PTLR - 2;/////LAST PAGE IS FOR STACK
+   alias page_num S7;
+   while (Cur_Num_pages > Num_pages) do
+      if([PTBR + counter*2]!=-1) then
+      	 page_num = [PTBR + 2*counter];
+      	 [MEM_LIST + page_num] = 0;
+	 [PTBR + 2*counter] = -1;
+	 [PTBR + 2*counter + 1]="00";
+	 Cur_Num_pages = Cur_Num_pages - 1;
+      endif;
+      counter = counter - 1;
+   endwhile;
+   ///////////ALLOCATE EXTRA PAGES REQUIRED FOR NEW PROGRAM//////////////////
+   counter = 0;
+   page_num = 0;
+   while (Cur_Num_pages < Num_pages) do
+      if([PTBR + counter*2]==-1) then
+      	 if (page_num > 63) then
+	    [physicalSP - 2] = -1;
+      	    ireturn;	    
+	 endif;
+      	 if ([MEM_LIST + page_num] == 0) then
+	    [PTBR + 2*counter] = page_num;
+	    [PTBR + 2*counter + 1] = "01";
+	    [MEM_LIST + page_num] = 1;
+	    page_num = page_num + 1;
+	 endif;
+	 continue;
+      endif;
+      counter = counter + 1;
+   endwhile;
+   ///////////////LOAD PROGRAM TO THE MEMORY/////////////////////////
+   counter = 0;
+   while (counter < Num_pages) do
+      load([PTBR + 2*counter], [SCRATCHPAD + counter]);
+      counter = counter + 1;
+   endwhile;
+   ///////////////CLOSE ALL FILES OPENED BY CURRENT PROCESS///////////
+   alias currentPID S5;
+   currentPID = (PTBR - 1024) / 8;
+   alias currentPCB S6;
+   currentPCB = READY_LIST + 32 * currentPID;
+   ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
+   counter = 0;
+   while(counter < 8) do
+      if ([currentPCB + 15 + 2*counter]== -1) then
+         counter = counter + 1;
+         continue;
+      else
+         FileIndex = [currentPCB + 15 + 2*counter];
+      endif;
+      ////////REDUCE NUMBER OF OPEN FILES BY 1/////////////////
+      [ FILE_TABLE + FileIndex + 1] = [ FILE_TABLE + FileIndex + 1] - 1;
+      ///////////////INVALIDATE FAT INDEX IN SYS WIDE OPEN FILE TABLE IN CASE OF OPEN FILES ARE ZERO
+      if ([ FILE_TABLE + FileIndex + 1] == 0) then
+      	 [ FILE_TABLE + FileIndex] = -1;
+      endif;
+      /////INVALIDATING PER PROCESS FILE TABLE
+      [currentPCB + 15 + 2*counter] = -1;
+      [currentPCB + 15 + 2*counter + 1] = -1;
+      counter = counter + 1;
+   endwhile;
+   ////////////SETTING UP STACK POINTER////////////////////
+   SP = 3*512;
+   physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+   [physicalSP] = 0;//SETTING IP FOR NEW PROCESS
+   ireturn;
+endif;

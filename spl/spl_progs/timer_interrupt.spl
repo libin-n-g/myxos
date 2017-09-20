@@ -31,7 +31,7 @@ NextPID = currentPID + 1;
 newPCB = READY_LIST + 32 * (NextPID);
 alias counter S5;
 counter = 0;
-while(counter < 31) do
+while(counter < 32) do
 	 if ([ newPCB + 1 ] == 1) then
 	    break;
 	 endif;
