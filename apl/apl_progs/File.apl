@@ -33,6 +33,7 @@ integer main()
 	    print("6-Write");
 	    print("7-Seek");
 	    print("8-CopyFile");
+	    print("9-PrintFile");
 	    print("0-exit");
 	    read(option);
 	    if (option==1) then
