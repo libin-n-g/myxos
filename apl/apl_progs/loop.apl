@@ -1,11 +1,10 @@
 integer main()
 {
-	integer pid;
-	pid = Fork();
-	if (pid >= 0) then
-	   print(pid);
-	endif;
-	breakpoint;
-	pid = Exec("loop.xsm");
+	integer status, fp;
+	status = Create("Lock.dat");
+	fp = Open("Lock.dat");
+	status = Write(fp, 0);
+	status = Close(fp);
+	status = Exec("Prog.xsm");
 	return 0;
 }
