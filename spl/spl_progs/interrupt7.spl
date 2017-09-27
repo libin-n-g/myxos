@@ -2,30 +2,34 @@ alias physicalSP S0;
 alias System_call_NO S1;
 physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 System_call_NO = [physicalSP - 1];
+alias currentPID S3;
+currentPID = (PTBR - 1024) / 8;
 ///////////////////////////////////////////////////////////////////////////
 ///////////////// EXIT SYS CALL////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 if (System_call_NO == 10) then
    alias Current_PCB S2;
-   alias Ready_Process S5;
    alias counter S4;
+   alias flag S5;
+   flag = 0;
    counter = 0;
-   breakpoint;
-   Ready_Process = -1;
-   ///////FINDING RUNNING AND READY PROCESS/////////////// 
+   Current_PCB = READY_LIST;
+   ///////FINDING RUNNING AND READY PROCESS///////////////
    while(counter < 32) do
-	 if ([ READY_LIST + 32 * counter + 1 ] == 1) then
-	    Ready_Process = counter;
+   	 if ([ Current_PCB + 1 ] == (100 + currentPID)) then
+	    [Current_PCB + 1] = 1;
 	 endif;
-	 if ([ READY_LIST + 32 * counter + 1 ] == 2) then
-	    Current_PCB = READY_LIST + 32 * counter;
+	 if ([Current_PCB + 1 ] == 1) then
+	    flag = 1;
 	 endif;
 	 counter = counter + 1;
+	 Current_PCB = Current_PCB + 32;
    endwhile;
    ////////////HALT IN CASE OF NO READY PROCESS///////////////
-   if (Ready_Process == -1) then
+   if (flag == 0 ) then
       halt;
    endif;
+   Current_PCB = READY_LIST + 32 * currentPID;
    ////////////////CLOSING ALL FILES OPENED BY RUNNING(CURRENT) PROCESS
    alias FileIndex S3;
    ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
@@ -62,28 +66,98 @@ if (System_call_NO == 10) then
       [PTBR + counter*2 + 1]="00";
       counter = counter + 1;
    endwhile;
-   /////////////////////////RESTORING STATE FOR NEXT PID///////////////////////
-   alias newPCB S3;
-   newPCB =  READY_LIST + 32 * Ready_Process ;
-   BP = [ newPCB + 2 ];
-   SP = [ newPCB + 3 ];
+endif;
+
+/////////////////////////////////////////////////////////////
+////////////////Wait SYS call //////////////////////////////
+////////////////////////////////////////////////////////////
+if (System_call_NO == 13) then
+   alias WaitingPID S2;
+   WaitingPID = [physicalSP - 3];
+   alias WaitingPCB S4;
+   WaitingPCB = READY_LIST + 32 * WaitingPID;
+   if ([WaitingPCB + 1] == 0 || [WaitingPCB + 1] == 2) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   alias CurrentPCB S5;
+   CurrentPCB = READY_LIST + 32 * currentPID;
+   [CurrentPCB + 1] = 100 + WaitingPID;
+   [ CurrentPCB + 2 ] = BP;
+   [ CurrentPCB + 3 ] = SP - 1;
+   [ CurrentPCB + 4 ] = [physicalSP]; // Save IP of current process in the PCB from the stack
    //set PTBR and PTLR fields of the PCB with the values in PTBR and PTLR
-   PTBR = [ newPCB + 5 ];
-   PTLR = [ newPCB + 6 ];
+   [ CurrentPCB + 5 ] = PTBR; 
+   [ CurrentPCB + 6 ] = PTLR;
    //save the registers R0 to R7 in the respective fields of the PCB.
-   R0 = [ newPCB + 7 ];
-   R1 = [ newPCB + 8 ];
-   R2 = [ newPCB + 9 ];
-   R3 = [ newPCB + 10 ];
-   R4 = [ newPCB + 11 ];
-   R5 = [ newPCB + 12 ];
-   R6 = [ newPCB + 13 ];
-   R7 = [ newPCB + 14 ];
-   SP = SP + 1;///DUE DO IP IN THE TOP OF STACK 
-   alias newphysicalSP S2;
-   newphysicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
-   [ newphysicalSP ] = [ newPCB + 4 ]; // Stores IP field value of PCB on the stack
-   [ newPCB + 1 ] = 2; // Set STATE to RUNNING
+   [ CurrentPCB + 7 ] = R0;
+   [ CurrentPCB + 8 ] = R1;
+   [ CurrentPCB + 9 ] = R2;
+   [ CurrentPCB + 10 ] = R3;
+   [ CurrentPCB + 11 ] = R4;
+   [ CurrentPCB + 12 ] = R5;
+   [ CurrentPCB + 13 ] = R6; 
+   [ CurrentPCB + 14 ] = R7;
+   [physicalSP - 2] = 0;
    breakpoint;
+endif;
+//////////////////////////////////////////////////////////////////////
+/////////////////Signal SYS call//////////////////////////////////
+//////////////////////////////////////////////////////////////////
+if (System_call_NO == 14) then
+   alias counter S2;
+   counter = 0;
+   alias Current_PCB S4;
+   Current_PCB =  READY_LIST;
+   alias flag S5;
+   flag = -1;
+   while(counter < 32) do
+   	 if ([Current_PCB + 1] == (100 + currentPID)) then
+	    [Current_PCB + 1] = 1;
+	    flag = 0;
+	 endif;
+	 counter = counter + 1;
+	 Current_PCB = Current_PCB + 32;
+   endwhile;
+   [physicalSP - 2] = flag;
    ireturn;
 endif;
+///////////////////////////////////////////////////////////////////////
+//////////////////SCHEDULER for next process///////////////////////////
+/////////////////////////////////////////////////////////////////////
+alias newPCB S4;
+alias NextPID S5;
+NextPID = currentPID;
+newPCB = READY_LIST + 32 * (currentPID);
+alias counter S6;
+counter = 0;
+while(counter < 32) do
+	 if ([ newPCB + 1 ] == 1) then
+	    break;
+	 endif;
+	 NextPID = (NextPID + 1) % 32;
+	 newPCB = READY_LIST + 32 * (NextPID);
+	 counter = counter + 1;
+endwhile;
+
+/////////////////////////RESTORING STATE FOR NEXT PID///////////////////////
+BP = [ newPCB + 2 ];
+SP = [ newPCB + 3 ];
+//set PTBR and PTLR fields of the PCB with the values in PTBR and PTLR
+PTBR = [ newPCB + 5 ];
+PTLR = [ newPCB + 6 ];
+//save the registers R0 to R7 in the respective fields of the PCB.
+R0 = [ newPCB + 7 ];
+R1 = [ newPCB + 8 ];
+R2 = [ newPCB + 9 ];
+R3 = [ newPCB + 10 ];
+R4 = [ newPCB + 11 ];
+R5 = [ newPCB + 12 ];
+R6 = [ newPCB + 13 ];
+R7 = [ newPCB + 14 ];
+SP = SP + 1;///DUE DO IP IN THE TOP OF STACK 
+alias newphysicalSP S2;
+newphysicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+[ newphysicalSP ] = [ newPCB + 4 ]; // Stores IP field value of PCB on the stack
+[ newPCB + 1 ] = 2; // Set STATE to RUNNING
+ireturn;

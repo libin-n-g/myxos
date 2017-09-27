@@ -130,6 +130,7 @@ if (System_call_NO==8) then
       [newPCB + counter + 1] = [CurrentPCB + counter + 1];
       counter = counter + 2;
    endwhile;
+   [newPCB + 31] = CurrentPID; //////storing parent pid
    [physicalSP - 2] = PID;
    ////FINDING PHYSICAL SP FOR CHILD PROCESSS
    ////AND GIVING RETURN VALUE -2  FOR CHILD

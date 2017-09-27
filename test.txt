@@ -517,133 +517,14 @@ Type "help" for  getting a list of commands.
 
 No of Free Blocks = 484
 Total no of Blocks = 512# Filename: even.xsm   Filesize: 512
-Filename: loop.xsm   Filesize: 512
+Filename: Prog.xsm   Filesize: 512
 # Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-FileName
-Status
-0
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-FileName
-filePointer
-0
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-FilePointer
-Enter Word
-To Write
-Status
-0
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-FilePointer
-Enter positio
-To seek
-Status
-0
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-FilePointer
-Status
-0
-Word read
-Libin
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-FileName
-Status
--1
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-Filepointer
-filePointer
-0
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
-Enter
-FileName
-Status
-0
-Enter Option
-File SYSCall
-1-Create
-2-Delete
-3-Open
-4-Close
-5-Read
-6-Write
-7-Seek
-0-exit
+Prog SYSCall
+1-Fork
+2-Exec
+3-Getpid
+4-getppid
+5-Wait
+6-Signal
+0-Exit
 Machine is halting

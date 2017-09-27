@@ -113,3 +113,20 @@ if (System_call_NO == 9) then
    [physicalSP] = 0;//SETTING IP FOR NEW PROCESS
    ireturn;
 endif;
+///////////////Getpid SYS call///////////////
+if (System_call_NO == 11) then
+   alias currentPID S5;
+   currentPID = (PTBR - 1024) / 8;
+   [physicalSP - 2] = currentPID;
+   ireturn;   
+endif;
+///////////////Getppid SYS call///////////////
+if (System_call_NO == 12) then
+   alias currentPID S5;
+   currentPID = (PTBR - 1024) / 8;
+   alias currentPCB S6;
+   currentPCB = READY_LIST + 32 * currentPID;
+   [physicalSP - 2] = [currentPCB + 31];
+   ireturn;
+   
+endif;

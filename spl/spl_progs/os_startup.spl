@@ -52,7 +52,7 @@ PTLR = 4;
 [PTBR + 5] = "01"; // Auxiliary Information for Logical Page 3
 [PTBR + 6] = 28; // Physical Page Number for Logical Page 3 (Stack)
 [PTBR + 7] = "01"; // Auxiliary Information for Logical Page 3 (Stack)
-/////////////////// SETTING UP Per-Process Open-File Tables for INIT process///////////
+//////////// SETTING UP Per-Process Open-File Tables for INIT process////
 counter = 15;
 while (counter <= 30) do
       [READY_LIST + counter] = -1;//set invalid pointer to system wide open file table Entry
@@ -76,6 +76,7 @@ while (counter < 1024) do
       counter = counter + 32;
 endwhile;
 [READY_LIST + 1] = 2; // Sets the entry for STATE as Running
+[READY_LIST + 31] = 0; // Set Parent PID as 0 for init
 SP = 3 * 512;
 [28 * 512] = 0; // Set up the IP value for INIT in the stack
 ireturn; 
