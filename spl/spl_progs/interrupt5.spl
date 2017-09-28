@@ -41,27 +41,13 @@ if (System_call_NO==8) then
    [newPCB] = PID;
    ////////////////////UPDATE MEMORY FREE LIST//////////////////////////////
    [MEM_LIST + FreeMemPage] = 1;
-   /////////////////////COPY PAGES ////////////////////////////
-   alias Child_Page S6;
-   alias Parent_Page S7;
-   Num_Page = 0;
-   Valid_page = 0;
-   while (Num_Page < PTLR) do
-      if([PTBR + 2*Num_Page] == -1) then
-         Num_Page = Num_Page + 1;
-         continue;
-      endif;
-      Child_Page = [SCRATCHPAD + Valid_page] * 512;
-      Parent_Page = [PTBR + Num_Page*2] * 512;
-      if ([PTBR + Num_Page*2] != -1) then
-         counter = 0;
-      	 while (counter < 512) do
-	    [Child_Page + counter] = [Parent_Page + counter];
-	    counter = counter + 1;
-      	 endwhile;
-      endif;
-      Valid_page = Valid_page + 1;
-      Num_Page = Num_Page + 1;
+   /////////////////////COPY STACK PAGES ////////////////////////////
+   alias Parent_Page S6;
+   Parent_Page = [PTBR + 3*2] * 512;
+   counter = 0;
+   while (counter < 512) do
+   	 [FreeMemPage + counter] = [Parent_Page + counter];
+	 counter = counter + 1;
    endwhile;
    ///////////////////////////////////////////////////////
    alias Child_PTBR S6;
