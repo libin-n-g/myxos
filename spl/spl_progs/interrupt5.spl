@@ -52,6 +52,9 @@ if (System_call_NO==8) then
    //////////////////// CALCULATE CHILD PCB //////////////////////////
    alias Child_PTBR S6;
    Child_PTBR = 1024 + PID * 8;
+   /////////////////// SET CHILD PAGETABLE (FOR STACK) //////////////////
+   [Child_PTBR + 3*2 ] = FreeMemPage;
+   [Child_PTBR + 3*2 + 1] = "01";
    //////////SETUPING PAGE TABLE FOR CHILD PROCESS 
    counter = 0;
    Valid_page = 0;
