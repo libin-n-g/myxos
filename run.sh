@@ -2,8 +2,8 @@
 cd spl/
 ./run.sh
 cd ../apl
-./run.sh apl_progs/Prog.apl apl_progs/loop.apl apl_progs/even.apl
+./run.sh apl_progs/shell.apl apl_progs/Prog.apl apl_progs/even.apl
 cd ../xfs-interface/
 ./xfs-interface < Input.txt
 cd ../xsm
-./xsm --timer=1 < Input.txt
+./xsm --timer=1
