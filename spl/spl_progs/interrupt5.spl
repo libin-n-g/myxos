@@ -23,38 +23,21 @@ if (System_call_NO==8) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
-   ///ASSIGN PID TO PCB SLOT
-   [newPCB] = PID;
-   //////////////////////////////////////////////////////////////////
+   /////////////CHECK MEM FREE LIST FOR STACK PAGE//////////////////////////////
+   alias FreeMemPage S5;
    alias counter S4;
-   alias Num_Page S5;
-   alias Valid_page S8;
-   Valid_page = 0;
-   Num_Page = 0;
    counter = 0;
-   ////////////////////DUPLICATING PAGES FOR NEW PROCESS
-   while(counter < PTLR) do
-      if([PTBR + 2*counter]== -1) then
-         counter = counter + 1;
-         continue;
-      endif;
-      /////////////////////FAIL IF MEMORY NOT AVAALIABLE FOR COPING PAGES
-      if (Num_Page == 64) then
+   while ([MEM_LIST + counter] == 1) do
+   /////////////////////FAIL IF MEMORY NOT AVAILABLE FOR COPYING PAGES
+      if (Num_Page >= 64) then
          [physicalSP - 2] = -1;
       	 ireturn;      	 
       endif;
-      while (Num_Page < 64) do
-      ///////////////////////CHECKING FOR FREE MEM SLOTS IN MEMORY FREE LIST
-      	 if ([MEM_LIST + Num_Page] == 0) then
-      	    [SCRATCHPAD + Valid_page] = Num_Page;
-	    Valid_page = Valid_page + 1;
-	    Num_Page = Num_Page + 1;
-	    break;
-         endif;
-      	 Num_Page = Num_Page + 1;
-      endwhile;
       counter = counter + 1;
    endwhile;
+////////////////////////////////////////////////////////////////////////////
+   ///ASSIGN PID TO PCB SLOT
+   [newPCB] = PID;
    ////////////////////UPDATE MEMORY FREE LIST//////////////////////////////
    counter = 0;
    while (counter < Valid_page) do
