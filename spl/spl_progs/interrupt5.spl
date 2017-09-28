@@ -39,9 +39,9 @@ if (System_call_NO==8) then
 ////////////////////////////////////////////////////////////////////////////
    ///ASSIGN PID TO PCB SLOT
    [newPCB] = PID;
-   ////////////////////UPDATE MEMORY FREE LIST//////////////////////////////
+   //////////////////// UPDATE MEMORY FREE LIST//////////////////////////////
    [MEM_LIST + FreeMemPage] = 1;
-   /////////////////////COPY STACK PAGES ////////////////////////////
+   ///////////////////// COPY STACK PAGES ////////////////////////////
    alias Parent_Page S6;
    Parent_Page = [PTBR + 3*2] * 512;
    counter = 0;
@@ -49,7 +49,7 @@ if (System_call_NO==8) then
    	 [FreeMemPage + counter] = [Parent_Page + counter];
 	 counter = counter + 1;
    endwhile;
-   ///////////////////////////////////////////////////////
+   //////////////////// CALCULATE CHILD PCB //////////////////////////
    alias Child_PTBR S6;
    Child_PTBR = 1024 + PID * 8;
    //////////SETUPING PAGE TABLE FOR CHILD PROCESS 
