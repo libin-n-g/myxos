@@ -55,20 +55,26 @@ if (System_call_NO==8) then
    /////////////////// SET CHILD PAGETABLE (FOR STACK) //////////////////
    [Child_PTBR + 3*2 ] = FreeMemPage;
    [Child_PTBR + 3*2 + 1] = "01";
-   //////////SETUPING PAGE TABLE FOR CHILD PROCESS 
+   //////////SETUPING PAGE TABLE FOR CHILD PROCESS
+   alias page_Num S7;
    counter = 0;
-   Valid_page = 0;
-   while(counter< PTLR) do
-      if ([PTBR + 2*counter]==-1) then
-        [Child_PTBR + counter*2] = -1;
+   page_Num = 0;
+   while(counter < 3) do
+      page_Num = [PTBR + counter*2]
+      if ([PTBR + 2*counter + 1]%10 == 1) then
+	  [MEM_LIST + page_Num] = [MEM_LIST + page_Num] + 1;
       else
-	[Child_PTBR + counter*2] =  [SCRATCHPAD + Valid_page];
-	Valid_page = Valid_page + 1;
+	if (page_Num >= 448) then
+	   [DISK_LIST + page_Num] = [DISK_LIST + page_Num] + 1;
+	endif;
       endif;
+      [Child_PTBR + counter*2] = [PTBR + counter*2];
       [Child_PTBR + counter*2 + 1] =  [PTBR + counter*2 + 1];
       counter = counter + 1;
    endwhile;
-   /////////SETUP PCB FOR CHILD PROCESS////////////////////
+   ////STORE DISK FREE LIST BACK TO DISK////////////
+   store(6, 20);
+   /////////setup pcb for child process////////////////////
    [newPCB + 5] = Child_PTBR;
    [newPCB + 4] = [physicalSP];
    [newPCB + 3] = (SP - 1);
