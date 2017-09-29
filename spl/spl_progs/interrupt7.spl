@@ -59,13 +59,18 @@ if (System_call_NO == 10) then
    alias page_NO S3;
    while(counter < PTLR) do
       page_NO = [PTBR + counter*2];
-      if (page_NO!=-1) then
-      	 [MEM_LIST + page_NO] = 0;
+      if ([PTBR + counter*2 + 1]%10 == 1) then
+      	 [MEM_LIST + page_NO] = [MEM_LIST + page_NO] - 1;
+      else
+	if (page_NO >= 448) then
+	   [DISK_LIST + page_NO] = [DISK_LIST + page_NO] - 1;
+	endif;
       endif;
       [PTBR + counter*2]=-1;
       [PTBR + counter*2 + 1]="00";
       counter = counter + 1;
    endwhile;
+   store(6, 20);
 endif;
 
 /////////////////////////////////////////////////////////////
