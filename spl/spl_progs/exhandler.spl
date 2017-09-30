@@ -4,3 +4,15 @@ alias Ip_addr S2;
 Cause = EFR % 10;		// Gets value of cause field (size 1 char)
 VPagenum = (EFR / 10) % 100;    // Gets value of BadVAddr 
 Ip_addr = (EFR/1000);		//Gets value of IP at the point of exception
+breakpoint;
+if (Cause != 0) then
+   print(Cause);
+   inline "PUSH 10";
+   inline "PUSH IP";
+   alias int7loc S3;
+   int7loc = INTERRUPT + 512*2*6
+   inline "JMP S3"
+   breakpoint;
+else
+   
+endif;

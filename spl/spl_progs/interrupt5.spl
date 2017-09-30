@@ -29,13 +29,13 @@ if (System_call_NO==8) then
    counter = 0;
    while ([MEM_LIST + counter] == 1) do
    /////////////////////FAIL IF MEMORY NOT AVAILABLE FOR COPYING PAGES
-      if (Num_Page >= 64) then
+      if (counter >= 64) then
          [physicalSP - 2] = -1;
       	 ireturn;      	 
       endif;
       counter = counter + 1;
    endwhile;
-   FreeMemPage = counter
+   FreeMemPage = counter;
 ////////////////////////////////////////////////////////////////////////////
    ///ASSIGN PID TO PCB SLOT
    [newPCB] = PID;
@@ -60,7 +60,7 @@ if (System_call_NO==8) then
    counter = 0;
    page_Num = 0;
    while(counter < 3) do
-      page_Num = [PTBR + counter*2]
+      page_Num = [PTBR + counter*2];
       if ([PTBR + 2*counter + 1]%10 == 1) then
 	  [MEM_LIST + page_Num] = [MEM_LIST + page_Num] + 1;
       else
