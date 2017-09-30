@@ -30,5 +30,30 @@ if (Cause != 0) then
    inline "JMP S3";
    breakpoint;
 else
-   
+   if ([PTBR + 2*VPageNum] == -1) then
+      // print("Invalid");
+      // print("Address");
+      inline "PUSH 10";
+      inline "PUSH S2";
+      alias int7loc S3;
+      int7loc = INTERRUPT + 512*2*6;
+      inline "JMP S3";
+   else
+      alias counter S3;
+      alias Page_num S4;
+      counter = 0;
+      while([MEM_LIST + counter] != 0) do
+         if (counter >= 64) then
+            Page_num = -1;
+      	    break;	 
+         endif;
+         counter = counter + 1;
+      endwhile;
+      if (counter >= 64) then
+
+      else
+         Page_num = counter;
+      endif;
+      [MEM_LIST + Page_num] = [MEM_LIST + Page_num] + 1;
+   endif;
 endif;
