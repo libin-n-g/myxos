@@ -7,11 +7,27 @@ Ip_addr = (EFR/1000);		//Gets value of IP at the point of exception
 breakpoint;
 if (Cause != 0) then
    print(Cause);
+   if (Cause == 1) then
+      print("Illegal");
+      print("Instruction");
+   endif;
+   if (Cause == 2) then
+      print("Illegal");
+      print("mem Access");
+   endif;
+   if (Cause == 3) then
+      print("Arithemetic");
+      print("Exeption");
+   endif;
+   if (Cause == 4) then
+      print("Illegal");
+      print("Operands");
+   endif;
    inline "PUSH 10";
-   inline "PUSH IP";
+   inline "PUSH S2";
    alias int7loc S3;
-   int7loc = INTERRUPT + 512*2*6
-   inline "JMP S3"
+   int7loc = INTERRUPT + 512*2*6;
+   inline "JMP S3";
    breakpoint;
 else
    
