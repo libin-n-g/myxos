@@ -16,7 +16,7 @@ if (Cause != 0) then
       print("mem Access");
    endif;
    if (Cause == 3) then
-      print("Arithemetic");
+      print("Math");
       print("Exeption");
    endif;
    if (Cause == 4) then
@@ -30,9 +30,11 @@ if (Cause != 0) then
    inline "JMP S3";
    breakpoint;
 else
+////////////////////// CASE OF PAGE FAULT ///////////////////////
    if ([PTBR + 2*VPageNum] == -1) then
       // print("Invalid");
       // print("Address");
+      // REFERENCE TO INVALID ADDRESS
       inline "PUSH 10";
       inline "PUSH S2";
       alias int7loc S3;
@@ -41,7 +43,9 @@ else
    else
       alias counter S3;
       alias Page_num S4;
+      alias temp_page_no S6;
       counter = 0;
+      //////////////// SEARCHING MEM FREE LIST FOR FREE SLOT
       while([MEM_LIST + counter] != 0) do
          if (counter >= 64) then
             Page_num = -1;
@@ -49,8 +53,65 @@ else
          endif;
          counter = counter + 1;
       endwhile;
+      ///////////////////////SECOND CHANCE ALGORITHM 
       if (counter >= 64) then
+	 alias pagetable S7;
+	 alias PID S8;
+	 PID = (PTBR-PAGE_TABLE)/8;
+	 alias Victim_Page S9;
+	 Victim_Page = -1;
+	 counter = PID*8 + Vpagenum*2;
+	 pagetable = PAGE_TABLE + counter;
+	 ////ALWAYS A VICTIM PAGE IS FOUND
+	 while(1==1) do
+	     ////// CHECK REFERANCE BIT IN NON-STACK PAGES////////
+	     ////// ASSUMING PLTR = 4 ////////////
+	     if ((counter+1)%4 == 0) then
+	     	counter = counter + 2;
+		pagetable = pagetable +  2;
+		continue;
+	     endif;
+	     temp_page_no = [pagetable];
+	     if ([pagetable + 1]/10 == 0) then
+	     	if ([MEM_LIST + temp_page_no] == 1) then
+		   Victim_Page = pagetable;
+		   break;
+	        endif;
+	      else
+		[pagetable + 1] == 0*10 + [pagetable + 1]%10;
+	      endif;	
+	     counter = counter + 2;
+	     pagetable = pagetable +  2;
+	 endwhile;
+	 ///////////////////////////////////////////
+	 alias Swap S5;
+	 counter = 448;
+	 ///// FIND FREE BLOCK FOR COPYING MEM///////////////////
+	 while(counter<512) do
+	     if ([DISK_LIST + counter] == 0) then
+	     	Swap = counter;
+	     	break;
+	     endif;
+	 endwhile;
+	 /////EXIT IN CASE OF NO SWAP BLOCK IS FREE///////////////
+	 if (counter >= 512) then
+	    inline "PUSH 10";
+      	    inline "PUSH S2";
+      	    alias int7loc S3;
+      	    int7loc = INTERRUPT + 512*2*6;
+      	    inline "JMP S3";
+	 endif;
+	 //////store Victim page in disk swap
+	 alias Vict_Phy_page S9;
+	 Vict_Phy_page = [Victim_Page]
+	 store(Vict_Phy_page, Swap);
+	 [DISK_LIST + Swap] = [DISK_LIST + Swap] + 1;
+	 [Victim_Page]= Swap;
+	 [Victim_Page + 1]= "00";
+	 alias Phy_pageno S10;
+	 
 
+	 /////////////////////////////////////
       else
          Page_num = counter;
       endif;

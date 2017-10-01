@@ -27,7 +27,7 @@ if (System_call_NO==8) then
    alias FreeMemPage S5;
    alias counter S4;
    counter = 0;
-   while ([MEM_LIST + counter] == 1) do
+   while ([MEM_LIST + counter] >= 1) do
    /////////////////////FAIL IF MEMORY NOT AVAILABLE FOR COPYING PAGES
       if (counter >= 64) then
          [physicalSP - 2] = -1;
