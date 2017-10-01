@@ -4,6 +4,7 @@ alias Argument1 S2;
 physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 System_call_NO = [physicalSP - 1];
 Argument1 = [physicalSP - 3];
+print(Argument1);
 ///////////////////////////////////////////////////////////////////////////
 ///////////////// EXCV SYS CALL////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -17,6 +18,8 @@ if (System_call_NO == 9) then
 	endif;
 	FileIndex = FileIndex + 1;
    endwhile;
+   print("DDDD");
+   breakpoint;
    if (FileIndex >= 64) then
       [physicalSP - 2] = -1;
       ireturn;

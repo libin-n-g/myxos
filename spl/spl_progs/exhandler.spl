@@ -4,6 +4,8 @@ alias Ip_addr S2;
 Cause = EFR % 10;		// Gets value of cause field (size 1 char)
 VPagenum = (EFR / 10) % 100;    // Gets value of BadVAddr 
 Ip_addr = (EFR/1000);		//Gets value of IP at the point of exception
+alias physicalSP S11;
+print("EXEPTION");
 breakpoint;
 if (Cause != 0) then
    print(Cause);
@@ -23,20 +25,22 @@ if (Cause != 0) then
       print("Illegal");
       print("Operands");
    endif;
-   inline "PUSH 10";
-   inline "PUSH S2";
+   SP = SP + 2;
+   physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+   [physicalSP - 1] = 10;
    alias int7loc S3;
    int7loc = INTERRUPT + 512*2*6;
    inline "JMP S3";
    breakpoint;
 else
 ////////////////////// CASE OF PAGE FAULT ///////////////////////
-   if ([PTBR + 2*VPageNum] == -1) then
+   if ([PTBR + 2*VPagenum] == -1) then
       // print("Invalid");
       // print("Address");
       // REFERENCE TO INVALID ADDRESS
-      inline "PUSH 10";
-      inline "PUSH S2";
+      SP = SP + 2;
+      physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+      [physicalSP - 1] = 10;
       alias int7loc S3;
       int7loc = INTERRUPT + 512*2*6;
       inline "JMP S3";
@@ -60,7 +64,7 @@ else
 	 PID = (PTBR-PAGE_TABLE)/8;
 	 alias Victim_Page S9;
 	 Victim_Page = -1;
-	 counter = PID*8 + Vpagenum*2;
+	 counter = PID*8 + VPagenum*2;
 	 pagetable = PAGE_TABLE + counter;
 	 ////ALWAYS A VICTIM PAGE IS FOUND
 	 while(1==1) do
@@ -78,7 +82,7 @@ else
 		   break;
 	        endif;
 	      else
-		[pagetable + 1] == 0*10 + [pagetable + 1]%10;
+		[pagetable + 1] = 0*10 + [pagetable + 1]%10;
 	      endif;	
 	     counter = counter + 2;
 	     pagetable = pagetable +  2;
@@ -95,26 +99,38 @@ else
 	 endwhile;
 	 /////EXIT IN CASE OF NO SWAP BLOCK IS FREE///////////////
 	 if (counter >= 512) then
-	    inline "PUSH 10";
-      	    inline "PUSH S2";
-      	    alias int7loc S3;
-      	    int7loc = INTERRUPT + 512*2*6;
-      	    inline "JMP S3";
+      	    SP = SP + 2;
+	    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+	    [physicalSP - 1] = 10;
+	    alias int7loc S3;
+	    int7loc = INTERRUPT + 512*2*6;
+	    inline "JMP S3";
 	 endif;
+	 Page_num = [Victim_Page];
 	 //////store Victim page in disk swap
-	 alias Vict_Phy_page S9;
-	 Vict_Phy_page = [Victim_Page]
-	 store(Vict_Phy_page, Swap);
+	 store(Page_num, Swap);
 	 [DISK_LIST + Swap] = [DISK_LIST + Swap] + 1;
 	 [Victim_Page]= Swap;
 	 [Victim_Page + 1]= "00";
-	 alias Phy_pageno S10;
-	 
-
 	 /////////////////////////////////////
       else
          Page_num = counter;
       endif;
+      alias Phy_blockno S10;
+      Phy_blockno = [PTBR + VPagenum];
+      if (Phy_blockno > 20 && Phy_blockno < 448) then
+      	 load(Page_num, Phy_blockno);
+      endif;
+      if ((Phy_blockno > 447) && (Phy_blockno < 512)) then
+      	 load(Page_num, Phy_blockno);
+	 [DISK_LIST + Phy_blockno] = [DISK_LIST + Phy_blockno] - 1;
+      endif;
+      [PTBR + VPagenum] = Page_num;
+      [PTBR + VPagenum + 1] = "11";
+      SP = SP + 1;      
+      physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+      [physicalSP] = Ip_addr;
       [MEM_LIST + Page_num] = [MEM_LIST + Page_num] + 1;
    endif;
+   ireturn;
 endif;
