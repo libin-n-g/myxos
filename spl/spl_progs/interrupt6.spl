@@ -4,7 +4,6 @@ alias Argument1 S2;
 physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 System_call_NO = [physicalSP - 1];
 Argument1 = [physicalSP - 3];
-print(Argument1);
 ///////////////////////////////////////////////////////////////////////////
 ///////////////// EXCV SYS CALL////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -18,8 +17,6 @@ if (System_call_NO == 9) then
 	endif;
 	FileIndex = FileIndex + 1;
    endwhile;
-   print("DDDD");
-   breakpoint;
    if (FileIndex >= 64) then
       [physicalSP - 2] = -1;
       ireturn;
@@ -27,9 +24,6 @@ if (System_call_NO == 9) then
    //////////////////////////LOAD BASIC BLOCK TO SCRACHPAD///////////////////
    load(1, [FAT + FileIndex*8 + 2]);
    ///////////////////SETTING DISK BLOCK NUMBER FOR NEW PROGRAM////////////////
-   if ([SCRATCHPAD + 3]!= -1) then
-      print("Big Program");
-   endif;
    alias page_Num S4;
    alias counter S5;
    counter = 0;

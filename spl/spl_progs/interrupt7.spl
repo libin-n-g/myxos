@@ -31,7 +31,7 @@ if (System_call_NO == 10) then
    endif;
    Current_PCB = READY_LIST + 32 * currentPID;
    ////////////////CLOSING ALL FILES OPENED BY RUNNING(CURRENT) PROCESS
-   alias FileIndex S3;
+   alias FileIndex S7;
    ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
    counter = 0;
    while(counter < 8) do
@@ -54,9 +54,9 @@ if (System_call_NO == 10) then
    endwhile;
    //////////////////////SETTING STATE TO TERMINATED/////////////////
    [Current_PCB + 1 ] = 0;
-   ////////FREEING PAGES USED BY CURRENT PROCESS AND INVALIDATING PAGE TABLE////////
+   ////////FREEING PAGES USED BY CURRENT PROCESS AND INVALIDATING PAGE TABLE///
    counter = 0;
-   alias page_NO S3;
+   alias page_NO S8;
    while(counter < PTLR) do
       page_NO = [PTBR + counter*2];
       if ([PTBR + counter*2 + 1]%10 == 1) then
@@ -81,7 +81,7 @@ if (System_call_NO == 13) then
    WaitingPID = [physicalSP - 3];
    alias WaitingPCB S4;
    WaitingPCB = READY_LIST + 32 * WaitingPID;
-   if ([WaitingPCB + 1] == 0 || [WaitingPCB + 1] == 2) then
+   if ([WaitingPCB + 1] == 0 || [WaitingPCB + 1] == 2 || WaitingPID < 0 || WaitingPID > 31) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
@@ -104,7 +104,6 @@ if (System_call_NO == 13) then
    [ CurrentPCB + 13 ] = R6; 
    [ CurrentPCB + 14 ] = R7;
    [physicalSP - 2] = 0;
-   breakpoint;
 endif;
 //////////////////////////////////////////////////////////////////////
 /////////////////Signal SYS call//////////////////////////////////

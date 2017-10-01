@@ -13,10 +13,8 @@ integer main()
 	      	 i = 1;
 	      else
 		 pid = Fork();
-		 breakpoint;
 		 if (pid != -1) then
 		    if (pid == -2) then
-		       	 print("Shell");
 		         status = Exec(command);
 			 if (status==-1) then
 			    print("Exec fail");
