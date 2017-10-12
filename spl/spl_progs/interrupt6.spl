@@ -45,7 +45,7 @@ if (System_call_NO == 9) then
       [PTBR + counter*2 + 1] = "00";
       counter = counter + 1;
    endwhile;
-   //store back disk free list to disk
+   /////store back disk free list to disk
    store(6,20);
    [PTBR + 2*3 + 1] = "01" ;// Page table entry for stack initalized
    ///////////////CLOSE ALL FILES OPENED BY CURRENT PROCESS///////////

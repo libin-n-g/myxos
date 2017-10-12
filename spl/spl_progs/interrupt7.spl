@@ -70,6 +70,7 @@ if (System_call_NO == 10) then
       [PTBR + counter*2 + 1]="00";
       counter = counter + 1;
    endwhile;
+   ///STORE DISK FREE LIST BACK TO DISK
    store(6, 20);
 endif;
 

@@ -30,8 +30,6 @@ if (Cause != 0) then
 else
 ////////////////////// CASE OF PAGE FAULT ///////////////////////
    if ([PTBR + 2*VPagenum] == -1) then
-      // print("Invalid");
-      // print("Address");
       // REFERENCE TO INVALID ADDRESS
       SP = SP + 2;
       physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
@@ -50,7 +48,7 @@ else
          endif;
          counter = counter + 1;
       endwhile;
-      ///////////////////////SECOND CHANCE ALGORITHM 
+      /////////////////SECOND CHANCE ALGORITHM /// IN CASE NO MEM AVALIALBLE
       if (counter >= 64) then
 	 alias pagetable S7;
 	 alias PID S8;
@@ -66,20 +64,22 @@ else
 	     	pagetable = 1024;
 		counter = 0;
 	     endif;
+	     ///////SKIP STACK AND INVALID PAGES///////
 	     if (((counter+2) % 8 == 0) || ([pagetable + 1]%10 == 0 )) then
 	     	counter = counter + 2;
 		pagetable = pagetable +  2;
 		continue;
 	     endif;
 	     temp_page_no = [pagetable];
+	     /////////FIND UNREFERANCED PAGE //////////
 	     if ([pagetable + 1]/10 == 0) then
 	     	if ([MEM_LIST + temp_page_no] == 1) then
 		   Victim_Page = pagetable;
 		   break;
 	        endif;
-	      else
+	      else  ///////SET REFERANCE BIT TO ZERO  FOR REFERENCED PAGES
 		[pagetable + 1] = "01";
-	      endif;	
+	      endif;
 	     counter = counter + 2;
 	     pagetable = pagetable +  2;
 	 endwhile;
@@ -102,31 +102,39 @@ else
 	    inline "JMP 11776";
 	 endif;
 	 Page_num = [Victim_Page];
+	 ////UPDATING MEMEORY FREE LIST
 	 [MEM_LIST + Page_num] = [MEM_LIST + Page_num] - 1;
 	 //////store Victim page in disk swap
 	 store(Page_num, Swap);
 	 [DISK_LIST + Swap] = [DISK_LIST + Swap] + 1;
 	 [Victim_Page]= Swap;
 	 [Victim_Page + 1]= "00";
+	 /////STORE DISK FREE LIST BACK TO DISK
 	 store(6,20);
 	 /////////////////////////////////////
       else
+      ///NO PAGE REPLACEMENT IS NEEDED IF PAGE IS ALREADY AVALILABLE
          Page_num = counter;
       endif;
+      ////LOAD FROM DISK FOR NEW PAGES
       alias Phy_blockno S10;
       Phy_blockno = [PTBR + 2*VPagenum];
       if (Phy_blockno > 20 && Phy_blockno < 448) then
       	 load(Page_num, Phy_blockno);
       endif;
+      /////LOAD FROM SWAP FOR PAGES WHICH ARE USED
       if ((Phy_blockno > 447) && (Phy_blockno < 512)) then
       	 load(Page_num, Phy_blockno);
 	 [DISK_LIST + Phy_blockno] = [DISK_LIST + Phy_blockno] - 1;
       endif;
+      ///SETTING PAGE TABLE FOR ENTRY WHICH CAUSED PAGE FAULT 
       [PTBR + 2*VPagenum] = Page_num;
       [PTBR + 2*VPagenum + 1] = "11";
+      //SETTING RETURN ADDRESS 
       SP = SP + 1;      
       physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
       [physicalSP] = Ip_addr;
+      ///UPDATING MEMORY FREE LIST 
       [MEM_LIST + Page_num] = [MEM_LIST + Page_num] + 1;
    endif;
    ireturn;
