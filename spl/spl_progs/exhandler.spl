@@ -24,6 +24,7 @@ if (Cause != 0) then
       print("Operands");
    endif;
    SP = SP + 2;
+   breakpoint;
    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
    [physicalSP - 1] = 10;
    inline "JMP 11776";
@@ -42,27 +43,29 @@ else
       counter = 0;
       //////////////// SEARCHING MEM FREE LIST FOR FREE SLOT
       while([MEM_LIST + counter] != 0) do
-         if (counter >= 64) then
+         if (counter >= 63) then
             Page_num = -1;
-      	    break;	 
+      	    break;
          endif;
          counter = counter + 1;
       endwhile;
       /////////////////SECOND CHANCE ALGORITHM /// IN CASE NO MEM AVALIALBLE
-      if (counter >= 64) then
+      if (counter >= 63) then
 	 alias pagetable S7;
 	 alias PID S8;
+	 alias HFlag S13;
 	 PID = (PTBR-PAGE_TABLE)/8;
 	 alias Victim_Page S9;
 	 counter = PID*8 + VPagenum*2;
 	 pagetable = PAGE_TABLE + counter;
 	 ////ALWAYS A VICTIM PAGE IS FOUND
-	 while(1==1) do
+	 HFlag = 0;
+	 while(HFlag < 512) do
 	     ////// CHECK REFERANCE BIT IN NON-STACK PAGES////////
 	     ////// ASSUMING PLTR = 4 ////////////
 	     if (pagetable > 1278) then
 	     	pagetable = 1024;
-		counter = 0;
+		    counter = 0;
 	     endif;
 	     ///////SKIP STACK AND INVALID PAGES///////
 	     if (((counter+2) % 8 == 0) || ([pagetable + 1]%10 == 0 )) then
@@ -82,8 +85,18 @@ else
 	      endif;
 	     counter = counter + 2;
 	     pagetable = pagetable +  2;
+	     HFlag = HFlag + 1;
 	 endwhile;
 	 ///////////////////////////////////////////
+	 if (HFlag == 512) then
+	    breakpoint;
+	    halt;
+	    SP = SP + 2;
+   		physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+   		[physicalSP - 1] = 10;
+   		inline "JMP 11776";
+	 endif;
+	 //////////////////////////////////////////
 	 alias Swap S5;
 	 counter = 448;
 	 ///// FIND FREE BLOCK FOR COPYING MEM///////////////////

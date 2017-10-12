@@ -34,11 +34,12 @@ if (System_call_NO==8) then
       	 alias pagetable S7;
 	 alias Victim_Page S8;
 	 alias temp_page_no S10;
+	 alias HFlag S13;
 	 counter = PID*8 + 3*2;
 	 pagetable = PAGE_TABLE + counter;
-	 ////ALWAYS A VICTIM PAGE IS FOUND///
+	 HFlag = 0;
 	 /////////FIND VICTIM PAGE////////////////
-	 while(1==1) do
+	 while(HFlag < 512) do
 	     ////// CHECK REFERANCE BIT IN NON-STACK PAGES////////
 	     ////// ASSUMING PLTR = 4 ////////////
 	     if (pagetable > 1279) then 
@@ -64,7 +65,12 @@ if (System_call_NO==8) then
 	      endif;	
 	     counter = counter + 2;
 	     pagetable = pagetable +  2;
+	     HFlag = HFlag + 1;
 	 endwhile;
+	 if (HFlag == 512) then 
+	 	[physicalSP - 2] = -1;
+      	ireturn;
+	 endif;
 	 ///////////////////////////////////////////
 	 alias Swap S6;
 	 counter = 448;
@@ -111,7 +117,7 @@ if (System_call_NO==8) then
    	 [FreeMemPage*512 + counter] = [Parent_Page + counter];
 	 counter = counter + 1;
    endwhile;
-   //////////////////// CALCULATE CHILD PCB //////////////////////////
+   //////////////////// CALCULATE CHILD PTBR //////////////////////////
    alias Child_PTBR S6;
    Child_PTBR = 1024 + PID * 8;
    /////////////////// SET CHILD PAGETABLE (FOR STACK) //////////////////

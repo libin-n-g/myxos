@@ -76,12 +76,13 @@ while (counter < 1024) do
       [READY_LIST + counter + 1] = 0;
       counter = counter + 32;
 endwhile;
+////////////SETTING UP SWAP BLOCKS////////////////////
 counter = 448;
 while (counter < 512) do
       [DISK_LIST + counter] = 0;
       counter = counter + 1;
 endwhile;
-store(6, 20);
+store(6, 20);// STORE DISK FREE LIST BCAK TO DISK
 [READY_LIST + 1] = 2; // Sets the entry for STATE as Running
 [READY_LIST + 31] = 0; // Set Parent PID as 0 for init
 SP = 3 * 512;
