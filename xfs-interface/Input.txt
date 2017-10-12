@@ -12,5 +12,11 @@ load --exhandler ../spl/spl_progs/exhandler.xsm
 load --int=timer ../spl/spl_progs/timer.xsm
 load --exec ../apl/apl_progs/even.xsm
 load --exec ../apl/apl_progs/Prog.xsm
+load --exec ../apl/apl_progs/s9test2.xsm
+load --exec ../apl/apl_progs/s11test.xsm
+load --exec ../apl/apl_progs/prime.xsm
+load --exec ../apl/apl_progs/A.xsm
+load --exec ../apl/apl_progs/B.xsm
+load --exec ../apl/apl_progs/test.xsm
 ls
 exit 
