@@ -80,6 +80,11 @@ endif;
 if (System_call_NO == 13) then
    alias WaitingPID S2;
    WaitingPID = [physicalSP - 3];
+   ////Check for valid PID
+   if ((WaitingPID > 31) || (WaitingPID < 0)) then
+    	[physicalSP - 2] = -1;
+    	ireturn;
+   endif;
    alias WaitingPCB S4;
    WaitingPCB = READY_LIST + 32 * WaitingPID;
    if ([WaitingPCB + 1] == 0 || [WaitingPCB + 1] == 2 || WaitingPID < 0 || WaitingPID > 31) then
@@ -114,17 +119,14 @@ if (System_call_NO == 14) then
    counter = 0;
    alias Current_PCB S4;
    Current_PCB =  READY_LIST;
-   alias flag S5;
-   flag = -1;
    while(counter < 32) do
    	 if ([Current_PCB + 1] == (100 + currentPID)) then
 	    [Current_PCB + 1] = 1;
-	    flag = 0;
 	 endif;
 	 counter = counter + 1;
 	 Current_PCB = Current_PCB + 32;
    endwhile;
-   [physicalSP - 2] = flag;
+   [physicalSP - 2] = 0;
    ireturn;
 endif;
 ///////////////////////////////////////////////////////////////////////
@@ -144,7 +146,9 @@ while(counter < 32) do
 	 newPCB = READY_LIST + 32 * (NextPID);
 	 counter = counter + 1;
 endwhile;
-
+if (counter == 32) then
+     [physicalSP - 2] = -1;
+endif;
 /////////////////////////RESTORING STATE FOR NEXT PID///////////////////////
 BP = [ newPCB + 2 ];
 SP = [ newPCB + 3 ];
