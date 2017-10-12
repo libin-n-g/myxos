@@ -114,7 +114,7 @@ else
          Page_num = counter;
       endif;
       alias Phy_blockno S10;
-      Phy_blockno = [PTBR + VPagenum];
+      Phy_blockno = [PTBR + 2*VPagenum];
       if (Phy_blockno > 20 && Phy_blockno < 448) then
       	 load(Page_num, Phy_blockno);
       endif;
@@ -122,8 +122,8 @@ else
       	 load(Page_num, Phy_blockno);
 	 [DISK_LIST + Phy_blockno] = [DISK_LIST + Phy_blockno] - 1;
       endif;
-      [PTBR + VPagenum] = Page_num;
-      [PTBR + VPagenum + 1] = "11";
+      [PTBR + 2*VPagenum] = Page_num;
+      [PTBR + 2*VPagenum + 1] = "11";
       SP = SP + 1;      
       physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
       [physicalSP] = Ip_addr;

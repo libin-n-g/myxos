@@ -5,9 +5,9 @@ integer main()
 	if(childpid == -2) then
 		retval = Exec("sample.xsm");
 	else
-		print(childpid);
-		retval = Wait(childpid);
+		while(childpid != -1) do
+			print(childpid);
+		endwhile;
 	endif;
-	Exit();
 	return 0;
 }
