@@ -89,12 +89,10 @@ else
 	 endwhile;
 	 ///////////////////////////////////////////
 	 if (HFlag == 512) then
-	    breakpoint;
-	    halt;
 	    SP = SP + 2;
-   		physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
-   		[physicalSP - 1] = 10;
-   		inline "JMP 11776";
+   	    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+   	    [physicalSP - 1] = 10;
+   	    inline "JMP 11776";
 	 endif;
 	 //////////////////////////////////////////
 	 alias Swap S5;
