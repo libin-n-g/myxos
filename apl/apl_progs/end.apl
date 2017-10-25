@@ -88,8 +88,10 @@ integer main()
 	   print("CHILD");
 	   print (option);
 	endif;
-	while(1==1) do
-	   option = 0;
-	endwhile;
+	breakpoint;
+	status = Wait(0);
+	print("ss");
+	print(status);
+	breakpoint;
 	return 0;
 }

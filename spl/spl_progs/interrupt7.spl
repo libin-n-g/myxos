@@ -81,10 +81,6 @@ if (System_call_NO == 13) then
    alias WaitingPID S2;
    WaitingPID = [physicalSP - 3];
    ////Check for valid PID
-   if ((WaitingPID > 31) || (WaitingPID < 0)) then
-    	[physicalSP - 2] = -1;
-    	ireturn;
-   endif;
    alias WaitingPCB S4;
    WaitingPCB = READY_LIST + 32 * WaitingPID;
    if ([WaitingPCB + 1] == 0 || [WaitingPCB + 1] == 2 || WaitingPID < 0 || WaitingPID > 31) then
@@ -146,6 +142,7 @@ while(counter < 32) do
 	 newPCB = READY_LIST + 32 * (NextPID);
 	 counter = counter + 1;
 endwhile;
+///CASE IN WHICH NO OTHER PROCESS CAN BE RUN (DEADLOCK)
 if (counter == 32) then
      [physicalSP - 2] = -1;
 endif;

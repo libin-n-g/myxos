@@ -9,6 +9,9 @@ integer main()
 	while (i == 0) do
 	      print("Enter Command");
 	      read(command);
+	      if (command == "b") then
+	      	 breakpoint;
+	      endif;
 	      if (command == "exit") then
 	      	 i = 1;
 	      else
