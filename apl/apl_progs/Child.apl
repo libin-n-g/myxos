@@ -11,7 +11,6 @@ integer main()
 	endwhile;
 	status = Signal(ppid);
 	status = Wait(pid);
-	print("Syn");
 	count = 100;
 	while (count <= 150 ) do
 	      print (-1*count*pid);
