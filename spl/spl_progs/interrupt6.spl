@@ -107,6 +107,8 @@ if (System_call_NO == 9) then
       [currentPCB + 15 + 2*counter + 1] = -1;
       counter = counter + 1;
    endwhile;
+   ///////////INITALIZE COUNT FOR SEMAPHORE//////////////
+   [1472 + currentPID] = 0;
    ////////////SETTING UP STACK POINTER////////////////////
    SP = 3*512;
    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);

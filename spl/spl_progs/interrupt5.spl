@@ -25,6 +25,8 @@ if (System_call_NO==8) then
    endif;
    ///ASSIGN PID TO PCB SLOT
    [newPCB] = PID;
+   //////////// INITALIZE SEMAPHORE///////////////
+   [1472 + PID] = 0;
    //////////////////////////////////////////////////////////////////
    alias counter S4;
    alias Num_Page S5;
