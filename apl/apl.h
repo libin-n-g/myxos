@@ -428,6 +428,7 @@ void codegen(struct tree * root)
 		case 'L':	//Close syscall
 		case 'D':	//Delete syscall
 		case 'Y':	//Wait syscall
+		case 'Z':	//Signal syscall
 			codegen(root->ptr1);
 			out_linecount+=2; fprintf(fp, "PUSH R%d\nPUSH R0\n", regcount-1);
 			regcount--;
@@ -435,7 +436,7 @@ void codegen(struct tree * root)
 			out_linecount++;
 			if( root->nodetype == 'C' || root->nodetype=='D')
 				fprintf(fp, "INT 1\n");
-			else if( root->nodetype == 'Y')
+			else if( root->nodetype == 'Y' || root->nodetype =='Z')
 				fprintf(fp, "INT 7\n");
 			else
 				fprintf(fp, "INT 2\n");
@@ -520,7 +521,7 @@ void codegen(struct tree * root)
 		case 'F':	//Fork syscall
 		case 'G':	//Getpid syscall
 		case 'P':	//Getppid syscall
-		case 'Z':	//Signal syscall
+		
 			out_linecount++; fprintf(fp, "PUSH R0\n");
 			out_linecount+=2; fprintf(fp, "MOV R%d, %d\nPUSH R%d\n", regcount, root->value, regcount);
 			out_linecount++;
@@ -1060,7 +1061,7 @@ struct tree* syscheck(struct tree * a,  struct tree * b,  int flag)
 			}
 			a->ptr1=b;
 			break;
-		case 4:		//Close, Wait
+		case 4:		//Close, Wait ,signal
 			if(b==NULL || b->ptr3!=NULL || b->type!=0)
 			{
 				printf("\n%d Type mismatch in system call %s!!\n", linecount, a->name);
