@@ -82,7 +82,7 @@ if (System_call_NO == 13) then
     	[physicalSP - 2] = -1;
     	ireturn;
    endif;
-   breakpoint;
+   ////breakpoint;
    SemaPCB = READY_LIST + 32 * Sema_ID;
    if ([SemaPCB + 1] == 0) then
       [physicalSP - 2] = -1;
@@ -123,28 +123,33 @@ if (System_call_NO == 14) then
    alias Current_PCB S4;
    alias Sema_ID S5;
    alias SemaPCB S6;
+   alias SID S7;
    Sema_ID = [physicalSP - 3];
    ////Check for valid SEMA_ID
    if ((Sema_ID > 31) || (Sema_ID < 0)) then
     	[physicalSP - 2] = -1;
     	ireturn;
    endif;
-   breakpoint;
+   
    SemaPCB = READY_LIST + 32 * Sema_ID;
    if ([SemaPCB + 1] == 0) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
    Current_PCB =  READY_LIST + currentPID;
+   SID = currentPID;
    while(counter < 32) do
    	 if ([Current_PCB + 1] == (100 + Sema_ID)) then
 	    [Current_PCB + 1] = 1;
        	    [physicalSP - 2] = 0;
       	    ireturn;	    
 	 endif;
+	// breakpoint;		
 	 counter = counter + 1;
-	 Current_PCB = Current_PCB + 32;
+	 SID = (SID+1)%32;
+	 Current_PCB = (READY_LIST + SID*32);
    endwhile;
+   breakpoint;
    if (counter == 32) then
       [1472 + Sema_ID] = [1472 + Sema_ID] + 1;   
    endif;
@@ -169,6 +174,7 @@ while(counter < 32) do
 	 counter = counter + 1;
 endwhile;
 if (counter == 32) then
+   breakpoint;
      [physicalSP - 2] = -1;
      print "No ready";
      print "process";
