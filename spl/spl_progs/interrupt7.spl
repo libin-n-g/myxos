@@ -27,6 +27,8 @@ if (System_call_NO == 10) then
    endwhile;
    ////////////HALT IN CASE OF NO READY PROCESS///////////////
    if (flag == 0 ) then
+      print "No ready";
+      print "process";
       halt;
    endif;
    Current_PCB = READY_LIST + 32 * currentPID;
@@ -72,39 +74,45 @@ endif;
 ////////////////Wait SYS call //////////////////////////////
 ////////////////////////////////////////////////////////////
 if (System_call_NO == 13) then
-   alias WaitingPID S2;
-   WaitingPID = [physicalSP - 3];
-   alias WaitingPCB S4;
-   ////Check for valid PID
-   if ((WaitingPID > 31) || (WaitingPID < 0)) then
+   alias Sema_ID S2;
+   Sema_ID = [physicalSP - 3];
+   alias SemaPCB S4;
+   ////Check for valid SEMA_ID
+   if ((Sema_ID > 31) || (Sema_ID < 0)) then
     	[physicalSP - 2] = -1;
     	ireturn;
    endif;
    breakpoint;
-   WaitingPCB = READY_LIST + 32 * WaitingPID;
-   if ([WaitingPCB + 1] == 0 || [WaitingPCB + 1] == 2) then
+   SemaPCB = READY_LIST + 32 * Sema_ID;
+   if ([SemaPCB + 1] == 0) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
-   alias CurrentPCB S5;
-   CurrentPCB = READY_LIST + 32 * currentPID;
-   [CurrentPCB + 1] = 100 + WaitingPID;
-   [ CurrentPCB + 2 ] = BP;
-   [ CurrentPCB + 3 ] = SP - 1;
-   [ CurrentPCB + 4 ] = [physicalSP]; // Save IP of current process in the PCB from the stack
-   //set PTBR and PTLR fields of the PCB with the values in PTBR and PTLR
-   [ CurrentPCB + 5 ] = PTBR; 
-   [ CurrentPCB + 6 ] = PTLR;
-   //save the registers R0 to R7 in the respective fields of the PCB.
-   [ CurrentPCB + 7 ] = R0;
-   [ CurrentPCB + 8 ] = R1;
-   [ CurrentPCB + 9 ] = R2;
-   [ CurrentPCB + 10 ] = R3;
-   [ CurrentPCB + 11 ] = R4;
-   [ CurrentPCB + 12 ] = R5;
-   [ CurrentPCB + 13 ] = R6; 
-   [ CurrentPCB + 14 ] = R7;
-   [physicalSP - 2] = 0;
+   if ([1472 + Sema_ID] == 0) then
+      alias CurrentPCB S5;
+      CurrentPCB = READY_LIST + 32 * currentPID;
+      [CurrentPCB + 1] = 100 + Sema_ID;
+      [ CurrentPCB + 2 ] = BP;
+      [ CurrentPCB + 3 ] = SP - 1;
+      [ CurrentPCB + 4 ] = [physicalSP]; // Save IP of current process in the PCB from the stack
+      //set PTBR and PTLR fields of the PCB with the values in PTBR and PTLR
+      [ CurrentPCB + 5 ] = PTBR; 
+      [ CurrentPCB + 6 ] = PTLR;
+      //save the registers R0 to R7 in the respective fields of the PCB.
+      [ CurrentPCB + 7 ] = R0;
+      [ CurrentPCB + 8 ] = R1;
+      [ CurrentPCB + 9 ] = R2;
+      [ CurrentPCB + 10 ] = R3;
+      [ CurrentPCB + 11 ] = R4;
+      [ CurrentPCB + 12 ] = R5;
+      [ CurrentPCB + 13 ] = R6; 
+      [ CurrentPCB + 14 ] = R7;
+      [physicalSP - 2] = 0;
+   else
+      [1472 + Sema_ID] = [1472 + Sema_ID] - 1;
+      [physicalSP - 2] = 0;
+      ireturn;
+   endif;
 endif;
 //////////////////////////////////////////////////////////////////////
 /////////////////Signal SYS call//////////////////////////////////
@@ -113,14 +121,33 @@ if (System_call_NO == 14) then
    alias counter S2;
    counter = 0;
    alias Current_PCB S4;
-   Current_PCB =  READY_LIST;
+   alias Sema_ID S5;
+   alias SemaPCB S6;
+   Sema_ID = [physicalSP - 3];
+   ////Check for valid SEMA_ID
+   if ((Sema_ID > 31) || (Sema_ID < 0)) then
+    	[physicalSP - 2] = -1;
+    	ireturn;
+   endif;
+   breakpoint;
+   SemaPCB = READY_LIST + 32 * Sema_ID;
+   if ([SemaPCB + 1] == 0) then
+      [physicalSP - 2] = -1;
+      ireturn;
+   endif;
+   Current_PCB =  READY_LIST + currentPID;
    while(counter < 32) do
-   	 if ([Current_PCB + 1] == (100 + currentPID)) then
+   	 if ([Current_PCB + 1] == (100 + Sema_ID)) then
 	    [Current_PCB + 1] = 1;
+       	    [physicalSP - 2] = 0;
+      	    ireturn;	    
 	 endif;
 	 counter = counter + 1;
 	 Current_PCB = Current_PCB + 32;
    endwhile;
+   if (counter == 32) then
+      [1472 + Sema_ID] = [1472 + Sema_ID] + 1;   
+   endif;
    [physicalSP - 2] = 0;
    ireturn;
 endif;
@@ -143,6 +170,9 @@ while(counter < 32) do
 endwhile;
 if (counter == 32) then
      [physicalSP - 2] = -1;
+     print "No ready";
+     print "process";
+     halt;
 endif;
 /////////////////////////RESTORING STATE FOR NEXT PID///////////////////////
 BP = [ newPCB + 2 ];
