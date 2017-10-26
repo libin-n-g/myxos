@@ -19,11 +19,29 @@ integer main()
 	endif;
 	pid = Getpid();
 	status = Wait(pid);
+	if (status==-1) then
+	   print("Wait Failed");
+	endif;
 	status = Wait(pid);
+	if (status==-1) then
+	   print("Wait Failed");
+	endif;
 	status = Wait(pid);
+	if (status==-1) then
+	   print("Wait Failed");
+	endif;
 	status = Signal(c1pid);
+	if (status==-1) then
+	   print("Signal Failed");
+	endif;
 	status = Signal(c2pid);
+	if (status==-1) then
+	   print("Signal Failed");
+	endif;
 	status = Signal(c3pid);
+	if (status==-1) then
+	   print("Signal Failed");
+	endif;
 	////waiting for child to exit
 	status = Wait(c1pid);
 	status = Wait(c2pid);
