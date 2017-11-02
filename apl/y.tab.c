@@ -2000,7 +2000,7 @@ yyreduce:
 
   case 74:
 #line 280 "apl.y" /* yacc.c:1646  */
-    {(yyval.n)=syscheck((yyvsp[-3].n),(yyvsp[-1].n),1);
+    {(yyval.n)=syscheck((yyvsp[-3].n),(yyvsp[-1].n),3);
 							}
 #line 2006 "y.tab.c" /* yacc.c:1646  */
     break;

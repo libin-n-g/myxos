@@ -21,6 +21,10 @@ if (System_call_NO == 9) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
+   if([FAT + FileIndex*8 + 3] != 1) then
+      [physicalSP - 2] = -1; ///NO EXECUTE PERMISSION
+      ireturn;      
+   endif;
    //////////////////////////LOAD BASIC BLOCK TO SCRACHPAD///////////////////
    load(1, [FAT + FileIndex*8 + 2]);
    ///////////////////SETTING DISK BLOCK NUMBER FOR NEW PROGRAM////////////////

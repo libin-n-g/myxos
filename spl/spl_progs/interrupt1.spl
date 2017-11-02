@@ -41,6 +41,9 @@ if (System_call_NO == 1) then
 	     [FAT + FileIndex*8] = Argument1;
 	     [FAT + FileIndex*8 + 1] = 0;
 	     [FAT + FileIndex*8 + 2] = BlockNo;
+	     [FAT + FileIndex*8 + 3] = 0; //EXECUTE PERMISSION
+	     [FAT + FileIndex*8 + 4] = 0; //WRITE PERMISSION
+	     [FAT + FileIndex*8 + 5] = 0; //READ PERMISSION
 	     break;
 	endif;
 	FileIndex = FileIndex + 1;
@@ -55,7 +58,7 @@ if (System_call_NO == 1) then
 ////////SET ALL WORDS IN BASIC BLOCK IS SET TO -1/////////////////////
    alias index S6;
    index = 0;
-   while(index < 512) do
+   while(index < 256) do
       [SCRATCHPAD + index] = -1;
       index = index + 1;
    endwhile;
@@ -86,6 +89,10 @@ if (System_call_NO == 4) then
    if (FileIndex >= 64) then
       [physicalSP - 2] = -1;//FILE DOES NOT EXIST
       ireturn;
+   endif;
+   if ([FAT + FileIndex*8 + 4] !=1) then
+      [physicalSP - 2] = -1;//FILE DOES NOT HAVE WRITE PERMISSION
+      ireturn;      
    endif;
    /////////////CHECKING FILE IS OPEN OR NOT BY SEARCHING System Wide Open File Table/////////// 
    alias counter S5;			

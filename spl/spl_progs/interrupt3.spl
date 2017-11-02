@@ -7,42 +7,54 @@ System_call_NO = [physicalSP - 1];
 Argument2 = [physicalSP - 3];
 Argument1 = [physicalSP - 4];
 ///////////////////////////////////////////////////////////////
-//////////////////// SEEK System Call///////////////////////////
+//////////////////// CHMOD System Call///////////////////////////
 ////////////////////////////////////////////////////////////////
 if (System_call_NO == 6) then
-   ///CHECK FOR VALID FILE DESCRIPTOR
-   if ( (Argument1 < 0) ||(Argument1 > 7)) then
-      [physicalSP - 2] = -1;
-      ireturn;
+////////FAT is searched for file having same filename //////////////////////////
+   if(Argument2 < 0 || Argument2 > 7) then
+      [physicalSP - 2] = -1; // INVALID PERMISSION
+      ireturn;      
    endif;
-   alias currentPID S5;
-   currentPID = (PTBR - 1024) / 8;
-   alias currentPCB S6;
-   currentPCB = READY_LIST + 32 * currentPID;
-   ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
    alias FileIndex S4;
-   alias LSEEK S7;
-   if ([currentPCB + 15 + Argument1]== -1) then
-      [physicalSP - 2] = -1;
-      ireturn;
-   else
-      FileIndex = [currentPCB + 15 + 2*Argument1];
-      LSEEK = [currentPCB + 16 + 2*Argument1];
-   endif;
-   alias FATIndex S8;
-   FATIndex = [ FILE_TABLE + FileIndex];
-   alias FileSize S9;
-   FileSize = [FAT + 8 * FATIndex + 1];
-   ///CHECKING FOR VALID NEW LSEEK POSITION 
-   if ((Argument2 < 0 ) || (Argument2 > FileSize)) then
+   FileIndex = 0;
+   while(FileIndex < 64) do
+   	if(Argument1 == [FAT + FileIndex*8]) then
+	    break;
+	endif;
+	FileIndex = FileIndex + 1;
+   endwhile;
+   if (FileIndex >= 64) then //FILE NOT FOUND
       [physicalSP - 2] = -1;
       ireturn;      
    endif;
-   [currentPCB + 16 + 2*Argument1] = Argument2;
+   ///////CHANGING PERMISSION INT TO BINARY 
+   alias readbit S5;
+   alias executebit S6;
+   alias writebit S7;
+   readbit = 0;
+   executebit = 0;
+   writebit = 0;
+   if ((Argument2 % 2) == 1) then
+      executebit = 1;
+   endif;
+   Argument2 = Argument2 / 2;
+   if ((Argument2 % 2) == 1) then
+      writebit = 1;
+   endif;
+   Argument2 = Argument2 / 2;
+   if ((Argument2 % 2) == 1) then
+      readbit = 1;
+   endif;
+   /////// LOAD FAT FROM MEMORY//////////////// 
+   load(5, 19);
+   [FAT + FileIndex*8 + 3] = executebit; //EXECUTE PERMISSION
+   [FAT + FileIndex*8 + 4] = writebit; //WRITE PERMISSION
+   [FAT + FileIndex*8 + 5] = readbit;  //READ PERMISSION
+   /////////STORE FAT BLOCK BACK TO DISK/////////////////////
+   store(5, 19);
    [physicalSP - 2] = 0;
    ireturn;         
 endif;
-
 ///////////////////////////////////////////////////////////////
 ////////////////////Read System Call///////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -64,8 +76,12 @@ if (System_call_NO == 7) then
       [physicalSP - 2] = -1;
       ireturn;
    else
-      FileIndex = [currentPCB + 15 + 2*Argument1];
+      FileIndex = [currentPCB + 15 + 2*Argument1]/10;
       LSEEK = [currentPCB + 16 + 2*Argument1];
+   endif;
+   if ([currentPCB + 15 + 2*Argument1] % 10 != 0) then
+      [physicalSP - 2] = -1; 	       	       	  //FILE OPENED FOR WRITE
+      ireturn;
    endif;
    ///GETTING FAT ENTRY INDEX FROM PER PROCESS OPEN FILE TABLE
    alias FATIndex S8;
@@ -87,7 +103,7 @@ if (System_call_NO == 7) then
    ///STORING READ WORD TO ARGUMENT 2
    [physicalSP - 3] = [SCRATCHPAD + (LSEEK%512) ];
    ////INCREMENTING LSEEK
-   [currentPCB + 16 + 2*Argument1] = LSEEK + 1;
+   [currentPCB + 16 + 2*Argument1] = (LSEEK + 1); 
    [physicalSP - 2] = 0;
    ireturn;
 endif;

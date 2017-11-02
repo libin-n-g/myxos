@@ -26,8 +26,12 @@ if (System_call_NO == 5) then
       [physicalSP - 2] = -1;
       ireturn;
    else
-      FileIndex = [currentPCB + 15 + 2*Argument1];
+      FileIndex = [currentPCB + 15 + 2*Argument1] / 10;
       LSEEK = [currentPCB + 16 + 2*Argument1];
+   endif;
+   if ([currentPCB + 15 + 2*Argument1] % 10 != 1) then
+      [physicalSP - 2] = -1; 	       	       	  //FILE OPENED FOR READ
+      ireturn;
    endif;
    alias FATIndex S8;
    FATIndex = [ FILE_TABLE + FileIndex];
@@ -65,7 +69,7 @@ if (System_call_NO == 5) then
    Offset = (LSEEK%512);
    [SCRATCHPAD + Offset ] = Argument2;// WORD TO WRITE
    store(1, DataBlock);
-   [currentPCB + 16 + 2*Argument1] = LSEEK + 1;//INCREMENT LSEEK
+   [currentPCB + 16 + 2*Argument1] = (LSEEK + 1);//INCREMENT LSEEK 
    [physicalSP - 2] = 0;
    ireturn;
 endif;

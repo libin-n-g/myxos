@@ -10,7 +10,14 @@ Argument1 = [physicalSP - 3];
 if (System_call_NO == 2) then
 ///////////////FINDS INDEX OF GIVEN FILE IN FAT//////////
    alias FATIndex S3;
+   alias writebit S9;
+   Argument1 = [physicalSP - 4];
+   writebit = [physicalSP - 3];
    FATIndex = 0;
+   if (writebit<0 || writebit > 1) then
+      [physicalSP - 2] = -1;
+      ireturn;      
+   endif;
    while(FATIndex < 64) do
    	if(Argument1 == [FAT + FATIndex*8]) then
 	    break;
@@ -21,7 +28,15 @@ if (System_call_NO == 2) then
       [physicalSP - 2] = -1;
       ireturn;
    endif;
-///////////////////FINDS FILE INDEX IN SYSTEM WIDE OPEN FILE TABLE/////////
+   if(([FAT + FATIndex*8 + 4] != 1) && (writebit==1)) then
+      [physicalSP - 2] = -1; // REQUEST FOR WRITE BUT NO PERMISSION
+      ireturn;
+   endif;
+   if(([FAT + FATIndex*8 + 5] != 1) && (writebit==0)) then
+      [physicalSP - 2] = -1; // REQUEST FOR READ BUT NO PERMISSION
+      ireturn;
+   endif;
+   ///////////////////FINDS FILE INDEX IN SYSTEM WIDE OPEN FILE TABLE/////////
    alias FileIndex S4;			
    FileIndex = 0;
    while ( FileIndex <  128) do// 64 entries, each of size 2 words
@@ -54,8 +69,13 @@ if (System_call_NO == 2) then
    counter = 15;
    while (counter <= 30) do
       if ([currentPCB + counter] == -1) then
-      	 [currentPCB + counter] = FileIndex;
-	 [currentPCB + counter + 1] = 0;
+	 if(writebit==1) then
+    	     [currentPCB + counter] = FileIndex*10 + 1; //FIRST BIT IS 1 AS IT IS WRITE MODE
+   	 endif;
+   	 if(writebit==0) then
+      	     [currentPCB + counter] = FileIndex*10;     //FIRST BIT IS 0 AS IT IS READ MODE
+         endif;
+	 [currentPCB + counter + 1] = 0;  
       	 break;
       endif;
       counter = counter + 2;
@@ -63,8 +83,7 @@ if (System_call_NO == 2) then
    if (counter > 30) then
       [physicalSP - 2] = -1;
       ireturn;
-   endif;
-   
+   endif;  
    /////SETTING UP SYSTEM WIDE OPEN FILE TABLE////////////
    [ FILE_TABLE + FileIndex] = FATIndex;
    [ FILE_TABLE + FileIndex + 1] = [ FILE_TABLE + FileIndex + 1] + 1;
@@ -87,11 +106,11 @@ if (System_call_NO == 3) then
    currentPCB = READY_LIST + 32 * currentPID;
    ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
    alias FileIndex S3;
-   if ([currentPCB + 15 + Argument1]== -1) then
+   if (([currentPCB + 15 + Argument1*2]/10)== -1) then
       [physicalSP - 2] = -1;
       ireturn;
    else
-      FileIndex = [currentPCB + 15 + 2*Argument1];
+      FileIndex = [currentPCB + 15 + 2*Argument1]/10;
    endif;
    ////////REDUCE NUMBER OF OPEN FILES BY 1/////////////////
    [ FILE_TABLE + FileIndex + 1] = [ FILE_TABLE + FileIndex + 1] - 1;
