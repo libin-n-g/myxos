@@ -277,7 +277,7 @@ param:							{$$=NULL;
 		
 SysCall:	SYSCREA '(' param ')'			{$$=syscheck($1,$3,1);
 							}
-		|SYSOPEN '(' param ')'			{$$=syscheck($1,$3,1);
+		|SYSOPEN '(' param ')'			{$$=syscheck($1,$3,3);
 							}
 		|SYSWRIT '(' param ')'			{$$=syscheck($1,$3,5);
 							}

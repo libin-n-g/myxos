@@ -393,6 +393,7 @@ void codegen(struct tree * root)
 			out_linecount++;
 			fprintf(fp, "BRKP\n");
 			break;
+
 		case 'f':
 			n=regcount;
 			while(regcount>0)
@@ -423,8 +424,13 @@ void codegen(struct tree * root)
 				endfn();
 			}			
 			break;
-		case 'C':	//Create syscall
-		case 'O':	//Open syscall
+		
+		
+
+		
+
+
+		case 'C':	//Create syscall	
 		case 'L':	//Close syscall
 		case 'D':	//Delete syscall
 		case 'Y':	//Wait syscall
@@ -446,6 +452,26 @@ void codegen(struct tree * root)
 			out_linecount++; fprintf(fp, "POP R%d\n",regcount+1);
 			regcount++;
 			break;
+		
+			case 'O':	//Open syscall
+
+			codegen(root->ptr1);
+			out_linecount++; fprintf(fp, "PUSH R%d\n", regcount-1);
+			regcount--;
+			codegen(root->ptr1->ptr3);
+			out_linecount+=2; fprintf(fp, "PUSH R%d\nPUSH R0\n", regcount-1);
+			regcount--;
+			out_linecount+=2; fprintf(fp, "MOV R%d, %d\nPUSH R%d\n", regcount, root->value, regcount);
+			out_linecount++; fprintf(fp, "INT 2\n");
+
+			//Interrupt 
+			out_linecount++; fprintf(fp, "POP R%d\n", regcount+1);
+			out_linecount++; fprintf(fp, "POP R%d\n", regcount);
+			out_linecount++; fprintf(fp, "POP R%d\n", regcount+1);
+			out_linecount++; fprintf(fp, "POP R%d\n", regcount+1);	
+			regcount++;
+			break;
+
 		case 'W':	//Write syscall
 		case 'R':	//Read syscall
 			codegen(root->ptr1);
@@ -501,7 +527,7 @@ void codegen(struct tree * root)
 			out_linecount++; fprintf(fp, "POP R%d\n",regcount+1);	
 			regcount++;
 			break;
-		case 'S':	//Seek syscall
+		case 'S':	//Chmod syscall
 			codegen(root->ptr1);
 			out_linecount++; fprintf(fp, "PUSH R%d\n", regcount-1);
 			regcount--;
@@ -516,7 +542,7 @@ void codegen(struct tree * root)
 			out_linecount++; fprintf(fp, "POP R%d\n", regcount+1);
 			out_linecount++; fprintf(fp, "POP R%d\n", regcount+1);	
 			regcount++;
-			break;				
+			break;			
 		case 'F':	//Fork syscall
 		case 'G':	//Getpid syscall
 		case 'P':	//Getppid syscall
@@ -1052,10 +1078,11 @@ struct tree* syscheck(struct tree * a,  struct tree * b,  int flag)
 			}
 			a->ptr1=b;
 			break;
-		case 3:		//Seek
-			if(b==NULL || b->type!=0 || b->ptr3==NULL || b->ptr3->type!=0 || b->ptr3->ptr3!=NULL)
+		case 3:		//seek    //chmod
+			if(b==NULL || b->type!=3 || b->ptr3==NULL || b->ptr3->type!=0 || b->ptr3->ptr3!=NULL)
 			{
 				printf("\n%d Type mismatch in system call %s!!\n", linecount, a->name);
+				
 				exit(0);
 			}
 			a->ptr1=b;

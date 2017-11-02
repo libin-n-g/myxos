@@ -103,7 +103,7 @@ void func(int, char, char*, int);
 			return SYSWRIT;
 			}
 			
-"Seek"			{
+"Chmod"			{
 			func(0,'S',yytext,6);
 			return SYSSEEK;
 			}
@@ -240,7 +240,7 @@ void func(int, char, char*, int);
 			return ID;
 			}	
 						
-[\"].*[\"]		{func(3,'s',yytext,-1);
+[\"][^\"]*[\"]		{func(3,'s',yytext,-1);
 			return STRING;
 			}
 			
