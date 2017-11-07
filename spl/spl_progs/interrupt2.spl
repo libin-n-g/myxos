@@ -106,7 +106,8 @@ if (System_call_NO == 3) then
    currentPCB = READY_LIST + 32 * currentPID;
    ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
    alias FileIndex S3;
-   if (([currentPCB + 15 + Argument1*2]/10)== -1) then
+   breakpoint; 
+   if (([currentPCB + 15 + 2*Argument1])== -1) then
       [physicalSP - 2] = -1;
       ireturn;
    else

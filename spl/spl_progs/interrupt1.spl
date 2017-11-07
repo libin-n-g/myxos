@@ -150,6 +150,9 @@ if (System_call_NO == 4) then
    [FAT + FileIndex*8] = -1;
    [FAT + FileIndex*8 + 1] = 0;
    [FAT + FileIndex*8 + 2] = -1;
+   [FAT + FileIndex*8 + 3] = 0;
+   [FAT + FileIndex*8 + 4] = 0;
+   [FAT + FileIndex*8 + 5] = 0;
    
    ///// STORE FAT AND FREE DISK LIST BACK TO DISK//////////////////
    store(5, 19);

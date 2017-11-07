@@ -22,13 +22,14 @@ if (System_call_NO == 5) then
    ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
    alias FileIndex S4;
    alias LSEEK S7;
-   if ([currentPCB + 15 + Argument1]== -1) then
+   if ([currentPCB + 15 + 2*Argument1] == -1) then
       [physicalSP - 2] = -1;
       ireturn;
    else
       FileIndex = [currentPCB + 15 + 2*Argument1] / 10;
       LSEEK = [currentPCB + 16 + 2*Argument1];
    endif;
+   //////////////////CHECKING FOR PERMISSIONS/////////////
    if ([currentPCB + 15 + 2*Argument1] % 10 != 1) then
       [physicalSP - 2] = -1; 	       	       	  //FILE OPENED FOR READ
       ireturn;

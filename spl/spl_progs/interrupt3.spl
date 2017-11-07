@@ -27,6 +27,15 @@ if (System_call_NO == 6) then
       [physicalSP - 2] = -1;
       ireturn;      
    endif;
+   alias counter S10;
+   counter = 0;
+   while ( counter <  128) do// 64 entries, each of size 2 words
+	if ([ FILE_TABLE + counter + 0] == FileIndex) then
+	   [physicalSP - 2] = -1; //FILE IS OPEN
+      	   ireturn;
+	endif;
+	counter = counter + 2;	// Move to next entry
+   endwhile;
    ///////CHANGING PERMISSION INT TO BINARY 
    alias readbit S5;
    alias executebit S6;
@@ -72,7 +81,7 @@ if (System_call_NO == 7) then
    /////////////FROM PER PROCESS OPEN FILE
    alias FileIndex S4;
    alias LSEEK S7;
-   if ([currentPCB + 15 + Argument1]== -1) then
+   if ([currentPCB + 15 + 2*Argument1]== -1) then
       [physicalSP - 2] = -1;
       ireturn;
    else
