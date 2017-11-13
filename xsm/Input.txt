@@ -1,2 +1,2 @@
-sample.xsm
+trap.xsm
 exit

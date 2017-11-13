@@ -7,6 +7,6 @@ cd ../apl
 cd ../xfs-interface/
 ./xfs-interface < Input.txt
 cd ../xsm
-./xsm --debug
+./xsm < Input.txt
 
 
