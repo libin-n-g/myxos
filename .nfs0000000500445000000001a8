@@ -1,9 +1,0 @@
-#!/bin/sh
-cd spl/
-./run.sh
-cd ../apl
-./run.sh apl_progs/shell.apl apl_progs/Prog.apl apl_progs/even.apl apl_progs/s9test2.apl apl_progs/prime.apl apl_progs/s11test.apl
-cd ../xfs-interface/
-./xfs-interface < Input.txt
-cd ../xsm
-./xsm --timer=100
