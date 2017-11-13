@@ -25,7 +25,7 @@ if (Cause != 0) then
       print("Operands");
    endif;
    SP = SP + 2;
-   breakpoint;
+ //  breakpoint;
    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
    [physicalSP - 1] = 10;
    inline "JMP 11776";
@@ -91,6 +91,7 @@ else
 	 ///////////////////////////////////////////
 	 if (HFlag == 512) then
 	    SP = SP + 2;
+	    print "No free page";
    	    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
    	    [physicalSP - 1] = 10;
    	    inline "JMP 11776";
@@ -111,6 +112,7 @@ else
       	    SP = SP + 2;
 	    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
 	    [physicalSP - 1] = 10;
+	    print "no free swap ";
 	    inline "JMP 11776";
 	 endif;
 	 Page_num = [Victim_Page];

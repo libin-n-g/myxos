@@ -50,20 +50,21 @@ integer main()
     
     status = Fork();
     if(status == -2)then
-    status = Fork();
-    if(status == -2)then
-        status = Fork();
-        if(status == -2)then
-            status = Exec("trap.xsm");
-        endif;
-    else
-        if(status != -1)then status = Wait(status); endif;
-    endif;
+    	//status = Fork();
+    	if(status == -2)then
+        	status = Fork();
+       	 	if(status == -2)then
+            	status = Exec("trap.xsm");
+        	endif;
+    	else
+        	if(status != -1)then status = Wait(status); endif;
+    	endif;
     else
         if(status != -1)then status = Wait(status); endif;
     endif;
     
     if(status == -1)then
+    	breakpoint;
         print("failed at:");
         print(Getpid());
     else
