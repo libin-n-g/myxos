@@ -7,6 +7,6 @@ echo "Running"
 ./spl --int=5 spl_progs/interrupt5.spl
 ./spl --int=6 spl_progs/interrupt6.spl
 ./spl --int=7 spl_progs/interrupt7.spl
-./spl --exhandler spl_progs/haltprog.spl 
+./spl --exhandler spl_progs/exhandler.spl 
 ./spl --int=timer spl_progs/timer_interrupt.spl
 ./spl --os spl_progs/os_startup.spl

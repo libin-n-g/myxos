@@ -7,7 +7,6 @@ integer main()
 	integer option, pid;
 	option = 1;
 	while(option!=0) do
-	    if (0 == 0) then
 	        print("Enter Option");
 	    	print("Prog SYSCall");
 	    	print("1-Fork");
@@ -56,8 +55,6 @@ integer main()
 		   status = Signal();
 		   print(status);
 		endif;
-	    	status = Create("Lock.dat");
-             endif;
 	endwhile;
 	Exit();
 	return 0;

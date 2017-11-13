@@ -23,67 +23,33 @@ if (System_call_NO == 9) then
    endif;
    //////////////////////////LOAD BASIC BLOCK TO SCRACHPAD///////////////////
    load(1, [FAT + FileIndex*8 + 2]);
-   ///////////////////COUNT NUMBER OF VALID PAGES IN NEW PROGRAM////////////////
-   alias counter S4;
-   alias Num_pages S5;
+   ///////////////////SETTING DISK BLOCK NUMBER FOR NEW PROGRAM////////////////
+   alias page_Num S4;
+   alias counter S5;
    counter = 0;
-   Num_pages = 0;
+   page_Num = 0;
    while(counter < 3) do
+      page_Num = [PTBR + counter*2];
+      if ([PTBR + 2*counter + 1]%10 == 1) then
+	  [MEM_LIST + page_Num] = [MEM_LIST + page_Num] - 1;
+      else
+	if (page_Num >= 448) then
+	   [DISK_LIST + page_Num] = [DISK_LIST + page_Num] - 1;
+	endif;
+      endif;
       if ([SCRATCHPAD + counter] != -1) then
-      	Num_pages = Num_pages + 1;
+      	 [PTBR + counter*2] = [SCRATCHPAD + counter];
+      else
+         [PTBR + counter*2] = -1;
       endif;
+      [PTBR + counter*2 + 1] = "00";
       counter = counter + 1;
    endwhile;
-   //////////////////COUNT NUMBER OF VALID PAGES IN CURRENT PROCESS///////////////
-   counter=0;
-   alias Cur_Num_pages S6;
-   Cur_Num_pages = 0;
-   while(counter < (PTLR - 1)) do
-      if([PTBR + counter*2]!=-1) then
-	 Cur_Num_pages = Cur_Num_pages + 1;
-      endif;
-      counter = counter + 1;
-   endwhile;
-   ////////////////DEALLOCATE EXTRA PAGES FROM CURRENT PROCESS//////////////
-   counter = PTLR - 2;/////LAST PAGE IS FOR STACK
-   alias page_num S7;
-   while (Cur_Num_pages > Num_pages) do
-      if([PTBR + counter*2]!=-1) then
-      	 page_num = [PTBR + 2*counter];
-      	 [MEM_LIST + page_num] = 0;
-	 [PTBR + 2*counter] = -1;
-	 [PTBR + 2*counter + 1]="00";
-	 Cur_Num_pages = Cur_Num_pages - 1;
-      endif;
-      counter = counter - 1;
-   endwhile;
-   ///////////ALLOCATE EXTRA PAGES REQUIRED FOR NEW PROGRAM//////////////////
-   counter = 0;
-   page_num = 0;
-   while (Cur_Num_pages < Num_pages) do
-      if([PTBR + counter*2]==-1) then
-      	 if (page_num > 63) then
-	    [physicalSP - 2] = -1;
-      	    ireturn;	    
-	 endif;
-      	 if ([MEM_LIST + page_num] == 0) then
-	    [PTBR + 2*counter] = page_num;
-	    [PTBR + 2*counter + 1] = "01";
-	    [MEM_LIST + page_num] = 1;
-	    page_num = page_num + 1;
-	 endif;
-	 continue;
-      endif;
-      counter = counter + 1;
-   endwhile;
-   ///////////////LOAD PROGRAM TO THE MEMORY/////////////////////////
-   counter = 0;
-   while (counter < Num_pages) do
-      load([PTBR + 2*counter], [SCRATCHPAD + counter]);
-      counter = counter + 1;
-   endwhile;
+   /////store back disk free list to disk
+   store(6,20);
+   [PTBR + 2*3 + 1] = "01" ;// Page table entry for stack initalized
    ///////////////CLOSE ALL FILES OPENED BY CURRENT PROCESS///////////
-   alias currentPID S5;
+   alias currentPID S7;
    currentPID = (PTBR - 1024) / 8;
    alias currentPCB S6;
    currentPCB = READY_LIST + 32 * currentPID;

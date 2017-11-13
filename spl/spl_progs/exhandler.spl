@@ -1,0 +1,155 @@
+
+alias Cause S0;
+alias VPagenum S1;
+alias Ip_addr S2;
+Cause = EFR % 10;		// Gets value of cause field (size 1 char)
+VPagenum = (EFR / 10) % 100;    // Gets value of BadVAddr 
+Ip_addr = (EFR/1000);		//Gets value of IP at the point of exception
+alias physicalSP S11;
+if (Cause != 0) then
+   print(Cause);
+   if (Cause == 1) then
+      print("Illegal");
+      print("Instruction");
+   endif;
+   if (Cause == 2) then
+      print("Illegal");
+      print("mem Access");
+   endif;
+   if (Cause == 3) then
+      print("Math");
+      print("Exeption");
+   endif;
+   if (Cause == 4) then
+      print("Illegal");
+      print("Operands");
+   endif;
+   SP = SP + 2;
+ //  breakpoint;
+   physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+   [physicalSP - 1] = 10;
+   inline "JMP 11776";
+else
+////////////////////// CASE OF PAGE FAULT ///////////////////////
+   if ([PTBR + 2*VPagenum] == -1) then
+      // REFERENCE TO INVALID ADDRESS
+      SP = SP + 2;
+      physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+      [physicalSP - 1] = 10;
+      inline "JMP 11776";
+   else
+      alias counter S3;
+      alias Page_num S4;
+      alias temp_page_no S6;
+      counter = 0;
+      //////////////// SEARCHING MEM FREE LIST FOR FREE SLOT
+      while([MEM_LIST + counter] != 0) do
+         if (counter >= 63) then
+            Page_num = -1;
+      	    break;
+         endif;
+         counter = counter + 1;
+      endwhile;
+      /////////////////SECOND CHANCE ALGORITHM /// IN CASE NO MEM AVALIALBLE
+      if (counter >= 63) then
+	 alias pagetable S7;
+	 alias PID S8;
+	 alias HFlag S13;
+	 PID = (PTBR-PAGE_TABLE)/8;
+	 alias Victim_Page S9;
+	 counter = PID*8 + VPagenum*2;
+	 pagetable = PAGE_TABLE + counter;
+	 ////ALWAYS A VICTIM PAGE IS FOUND
+	 HFlag = 0;
+	 while(HFlag < 512) do
+	     ////// CHECK REFERANCE BIT IN NON-STACK PAGES////////
+	     ////// ASSUMING PLTR = 4 ////////////
+	     if (pagetable > 1278) then
+	     	pagetable = 1024;
+		    counter = 0;
+	     endif;
+	     ///////SKIP STACK AND INVALID PAGES///////
+	     if (((counter+2) % 8 == 0) || ([pagetable + 1]%10 == 0 )) then
+	     	counter = counter + 2;
+		pagetable = pagetable +  2;
+		continue;
+	     endif;
+	     temp_page_no = [pagetable];
+	     /////////FIND UNREFERANCED PAGE //////////
+	     if ([pagetable + 1]/10 == 0) then
+	     	if ([MEM_LIST + temp_page_no] == 1) then
+		   Victim_Page = pagetable;
+		   break;
+	        endif;
+	      else  ///////SET REFERANCE BIT TO ZERO  FOR REFERENCED PAGES
+		[pagetable + 1] = "01";
+	      endif;
+	     counter = counter + 2;
+	     pagetable = pagetable +  2;
+	     HFlag = HFlag + 1;
+	 endwhile;
+	 ///////////////////////////////////////////
+	 if (HFlag == 512) then
+	    SP = SP + 2;
+	    print "No free page";
+   	    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+   	    [physicalSP - 1] = 10;
+   	    inline "JMP 11776";
+	 endif;
+	 //////////////////////////////////////////
+	 alias Swap S5;
+	 counter = 448;
+	 ///// FIND FREE BLOCK FOR COPYING MEM///////////////////
+	 while(counter<512) do
+	     if ([DISK_LIST + counter] == 0) then
+	     	Swap = counter;
+	     	break;
+	     endif;
+	     counter = counter + 1;
+	 endwhile;
+	 /////EXIT IN CASE OF NO SWAP BLOCK IS FREE///////////////
+	 if (counter >= 512) then
+      	    SP = SP + 2;
+	    physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+	    [physicalSP - 1] = 10;
+	    print "no free swap ";
+	    inline "JMP 11776";
+	 endif;
+	 Page_num = [Victim_Page];
+	 ////UPDATING MEMEORY FREE LIST
+	 [MEM_LIST + Page_num] = [MEM_LIST + Page_num] - 1;
+	 //////store Victim page in disk swap
+	 store(Page_num, Swap);
+	 [DISK_LIST + Swap] = [DISK_LIST + Swap] + 1;
+	 [Victim_Page]= Swap;
+	 [Victim_Page + 1]= "00";
+	 /////STORE DISK FREE LIST BACK TO DISK
+	 store(6,20);
+	 /////////////////////////////////////
+      else
+      ///NO PAGE REPLACEMENT IS NEEDED IF PAGE IS ALREADY AVALILABLE
+         Page_num = counter;
+      endif;
+      ////LOAD FROM DISK FOR NEW PAGES
+      alias Phy_blockno S10;
+      Phy_blockno = [PTBR + 2*VPagenum];
+      if (Phy_blockno > 20 && Phy_blockno < 448) then
+      	 load(Page_num, Phy_blockno);
+      endif;
+      /////LOAD FROM SWAP FOR PAGES WHICH ARE USED
+      if ((Phy_blockno > 447) && (Phy_blockno < 512)) then
+      	 load(Page_num, Phy_blockno);
+	 [DISK_LIST + Phy_blockno] = [DISK_LIST + Phy_blockno] - 1;
+      endif;
+      ///SETTING PAGE TABLE FOR ENTRY WHICH CAUSED PAGE FAULT 
+      [PTBR + 2*VPagenum] = Page_num;
+      [PTBR + 2*VPagenum + 1] = "11";
+      //SETTING RETURN ADDRESS 
+      SP = SP + 1;      
+      physicalSP = ([PTBR + 2 * (SP / 512)] * 512) + (SP % 512);
+      [physicalSP] = Ip_addr;
+      ///UPDATING MEMORY FREE LIST 
+      [MEM_LIST + Page_num] = [MEM_LIST + Page_num] + 1;
+   endif;
+   ireturn;
+endif;

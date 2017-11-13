@@ -18,5 +18,10 @@ load --exec ../apl/apl_progs/prime.xsm
 load --exec ../apl/apl_progs/A.xsm
 load --exec ../apl/apl_progs/B.xsm
 load --exec ../apl/apl_progs/test.xsm
+load --exec ../apl/apl_progs/File.xsm
+load --exec ../apl/apl_progs/sample.xsm
+load --exec ../apl/apl_progs/test.xsm
+load --exec ../apl/apl_progs/end.xsm
+load --exec ../apl/apl_progs/trap.xsm
 ls
 exit 

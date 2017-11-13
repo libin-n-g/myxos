@@ -22,7 +22,7 @@ if (System_call_NO == 5) then
    ///// FINDING INDEX TO SYSTEM WIDE OPEN FILE ENTRY///////////
    alias FileIndex S4;
    alias LSEEK S7;
-   if ([currentPCB + 15 + Argument1]== -1) then
+   if ([currentPCB + 15 + 2*Argument1]== -1) then
       [physicalSP - 2] = -1;
       ireturn;
    else
